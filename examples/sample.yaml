@@ -1,0 +1,142 @@
+# yaml-language-server: $schema=../schema/azure-diagram.schema.json
+version: 1
+
+diagram:
+  title: Contoso AI platform
+  showDescriptions: true
+  direction: horizontal
+
+external:
+  - id: github
+    name: GitHub
+    description: Source control and CI pipelines
+    kind: saas
+  - id: customers
+    name: Customers
+    description: Public users of the chat app
+    kind: user
+
+entra:
+  name: Contoso tenant
+  description: contoso.onmicrosoft.com
+  domain: contoso.onmicrosoft.com
+  servicePrincipals:
+    - id: sp-github-deploy
+      name: github-deploy
+      description: Federated credential used by GitHub Actions
+      kind: application
+    - id: mi-chat-api
+      name: mi-chat-api
+      description: User-assigned identity for the chat API
+      kind: managedIdentity
+  users:
+    - id: alice
+      name: Alice Smith
+      description: Platform lead
+      userPrincipalName: alice@contoso.com
+    - id: bob
+      name: Bob Jones
+      description: Developer
+  groups:
+    - id: grp-platform
+      name: Platform Engineers
+      description: Contributor on the prod subscription
+      owners:
+        - ref: alice
+      members:
+        - ref: bob
+        - ref: sp-github-deploy
+        - type: user
+          name: Carol (contractor)
+          description: Guest account
+
+managementGroups:
+  - id: mg-contoso
+    name: Contoso
+    description: Root management group
+    subscriptions:
+      - id: sub-prod
+        name: Contoso Prod
+        description: Production workloads
+        resourceGroups:
+          - id: rg-chat
+            name: rg-chat-prod
+            description: Chat application
+            location: eastus2
+            keyVaults:
+              - id: kv-chat
+                name: kv-chat-prod
+                description: App secrets and API keys
+            containerRegistries:
+              - id: acr-contoso
+                name: acrcontoso
+                description: Shared image registry
+                repositories:
+                  - id: repo-chat-api
+                    name: chat-api
+                    description: Chat API image
+                    imageTags: ["1.4.2", latest]
+            containerApps:
+              - id: ca-chat-api
+                name: ca-chat-api
+                description: Public chat API
+                ingress: external
+                identity: mi-chat-api
+                containers:
+                  - id: ctr-chat-api
+                    name: chat-api
+                    description: FastAPI service
+                    imageRef: repo-chat-api
+            storageAccounts:
+              - id: st-chat
+                name: stchatprod
+                description: Conversation transcripts and uploads
+                blobContainers:
+                  - id: blob-transcripts
+                    name: transcripts
+                    description: Saved chat transcripts
+                  - id: blob-uploads
+                    name: uploads
+                    description: User-uploaded files
+            foundries:
+              - id: aif-chat
+                name: aif-chat-prod
+                description: AI Foundry project for the chat app
+                models:
+                  - id: dep-gpt
+                    name: gpt-chat
+                    description: Primary chat model
+                    model: gpt-4.1
+                    sku: GlobalStandard
+                    capacity: 100
+                agents:
+                  - id: agent-support
+                    name: Support agent
+                    description: Answers customer questions
+                    model: dep-gpt
+                    connectors:
+                      - id: conn-docs
+                        name: Docs search
+                        description: Searches uploaded files
+                        kind: fileSearch
+                        target: st-chat
+                      - id: conn-github
+                        name: GitHub MCP
+                        description: Reads issues for known bugs
+                        kind: mcp
+                        target: github
+
+connections:
+  - from: customers
+    to: ca-chat-api
+    label: HTTPS
+  - from: ca-chat-api
+    to: agent-support
+    label: invokes
+  - from: ca-chat-api
+    to: kv-chat
+    label: reads secrets
+    style: dashed
+  - from: github
+    to: acr-contoso
+    label: pushes images

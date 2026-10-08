@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zippy1981/drawio-azure-diagram-generator/schema/azure-diagram.schema.json",
+  "title": "Azure infrastructure diagram",
+  "description": "Describes Azure infrastructure (plus Entra ID and external systems) for rendering as a draw.io diagram. Every object has a name and an optional description. Objects with children render as boxes with their icon in the upper-left corner; objects without children render as a bare icon.",
+  "type": "object",
+  "required": ["version"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "version": {
+      "description": "Schema version of this document.",
+      "const": 1
+    },
+    "diagram": { "$ref": "#/$defs/diagramSettings" },
+    "external": {
+      "description": "Systems outside Azure and Entra (SaaS, on-prem, partners, end users).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/externalSystem" }
+    },
+    "entra": { "$ref": "#/$defs/entraTenant" },
+    "managementGroups": {
+      "description": "Optional management group hierarchy. Subscriptions may live here or at the top level, not both.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/managementGroup" }
+    },
+    "subscriptions": {
+      "description": "Subscriptions not placed under a management group.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/subscription" }
+    },
+    "connections": {
+      "description": "Arrows between any two objects, referenced by id.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/connection" }
+    }
+  },
+
+  "$defs": {
+    "id": {
+      "description": "Unique identifier used for references and connections. Lowercase letters, digits, '-', '_' and '.'. If omitted, one is derived from the object's path of names.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+
+    "named": {
+      "description": "Fields shared by every diagram object.",
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": {
+          "description": "Display name; the first line of the label.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "description": "Free text shown under the name (and as the tooltip).",
+          "type": "string"
+        },
+        "icon": {
+          "description": "Override the default icon: a draw.io image path such as 'img/lib/azure2/general/Globe.svg' or an http(s)/data URI.",
+          "type": "string"
+        },
+        "style": {
+          "description": "Extra draw.io style string appended to the generated style, e.g. 'fillColor=#fff2cc;'.",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Arbitrary key/value metadata copied onto the draw.io cell as custom properties.",
+          "type": "object",
+          "additionalProperties": { "type": ["string", "number", "boolean"] }
+        }
+      }
+    },
+
+    "diagramSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "pageName": { "type": "string", "default": "Azure" },
+        "showDescriptions": {
+          "description": "Render descriptions in labels. Descriptions are always added as tooltips.",
+          "type": "boolean",
+          "default": true
+        },
+        "direction": {
+          "description": "Which way top-level sections (External, Entra, Azure) are laid out.",
+          "enum": ["horizontal", "vertical"],
+          "default": "horizontal"
+        },
+        "maxRowWidth": {
+          "description": "Width in px after which children inside a box wrap to a new row.",
+          "type": "integer",
+          "minimum": 200,
+          "default": 1200
+        }
+      }
+    },
+
+    "externalSystem": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Picks the default icon.",
+          "enum": ["system", "saas", "onPrem", "user", "internet"],
+          "default": "system"
+        },
+        "url": { "type": "string" }
+      }
+    },
+
+    "entraTenant": {
+      "description": "The Entra ID tenant.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "tenantId": { "type": "string" },
+        "domain": { "type": "string" },
+        "servicePrincipals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/servicePrincipal" }
+        },
+        "users": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/user" }
+        },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/group" }
+        }
+      }
+    },
+
+    "servicePrincipal": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "application = app registration / enterprise app; managedIdentity = system- or user-assigned managed identity.",
+          "enum": ["application", "managedIdentity"],
+          "default": "application"
+        },
+        "appId": { "type": "string" }
+      }
+    },
+
+    "user": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "userPrincipalName": { "type": "string" },
+        "guest": { "type": "boolean", "default": false }
+      }
+    },
+
+    "group": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "owners": {
+          "description": "Rendered as an 'Owners' box inside the group.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/principalRef" }
+        },
+        "members": {
+          "description": "Rendered as a 'Members' box inside the group.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/principalRef" }
+        }
+      }
+    },
+
+    "principalRef": {
+      "description": "Either a reference to a principal defined elsewhere in 'entra' (by id), or an inline principal.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ref"],
+          "additionalProperties": false,
+          "properties": {
+            "ref": { "$ref": "#/$defs/id" },
+            "description": {
+              "description": "Optional note overriding the referenced object's description in this spot.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "allOf": [{ "$ref": "#/$defs/named" }],
+          "required": ["type"],
+          "unevaluatedProperties": false,
+          "properties": {
+            "type": { "enum": ["user", "group", "servicePrincipal"] }
+          }
+        }
+      ]
+    },
+
+    "managementGroup": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "managementGroups": {
+          "description": "Child management groups.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/managementGroup" }
+        },
+        "subscriptions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/subscription" }
+        }
+      }
+    },
+
+    "subscription": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "subscriptionId": { "type": "string" },
+        "resourceGroups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/resourceGroup" }
+        }
+      }
+    },
+
+    "resourceGroup": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "location": { "type": "string" },
+        "keyVaults": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/keyVault" }
+        },
+        "containerApps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/containerApp" }
+        },
+        "containerRegistries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/containerRegistry" }
+        },
+        "storageAccounts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/storageAccount" }
+        },
+        "foundries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/foundry" }
+        }
+      }
+    },
+
+    "keyVault": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "sku": { "enum": ["standard", "premium"] }
+      }
+    },
+
+    "containerApp": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "environment": {
+          "description": "Name of the Container Apps environment.",
+          "type": "string"
+        },
+        "ingress": { "enum": ["external", "internal", "none"] },
+        "identity": {
+          "description": "id of a servicePrincipal (managed identity) used by the app; drawn as a dashed connection.",
+          "$ref": "#/$defs/id"
+        },
+        "containers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/container" }
+        }
+      }
+    },
+
+    "container": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "image": {
+          "description": "Image reference. If it matches a repository id ('<registry-id>/<repo-id>' style) a dashed 'pulls' connection is drawn.",
+          "type": "string"
+        },
+        "imageRef": {
+          "description": "Explicit id of the repository this container pulls from.",
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+
+    "containerRegistry": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "sku": { "enum": ["Basic", "Standard", "Premium"] },
+        "repositories": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/repository" }
+        }
+      }
+    },
+
+    "repository": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "imageTags": {
+          "description": "Image tags present in the repository, e.g. ['1.4.2', 'latest'].",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "storageAccount": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "sku": { "type": "string" },
+        "blobContainers": {
+          "description": "Rendered as a 'Blob containers' box inside the storage account.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/blobContainer" }
+        }
+      }
+    },
+
+    "blobContainer": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "publicAccess": { "enum": ["none", "blob", "container"], "default": "none" }
+      }
+    },
+
+    "foundry": {
+      "description": "Azure AI Foundry resource / project.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "models": {
+          "description": "Rendered as a 'Models' box.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/modelDeployment" }
+        },
+        "agents": {
+          "description": "Rendered as an 'Agents' box.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/agent" }
+        }
+      }
+    },
+
+    "modelDeployment": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "model": { "description": "Base model name, e.g. 'gpt-4.1'.", "type": "string" },
+        "version": { "type": "string" },
+        "sku": { "type": "string" },
+        "capacity": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "agent": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "model": {
+          "description": "id of the modelDeployment the agent uses; drawn as a dashed connection.",
+          "$ref": "#/$defs/id"
+        },
+        "instructions": { "type": "string" },
+        "connectors": {
+          "description": "Rendered as a 'Connectors' box inside the agent.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/connector" }
+        }
+      }
+    },
+
+    "connector": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Tool / connector type.",
+          "enum": ["mcp", "openapi", "azureAISearch", "bingGrounding", "fileSearch", "codeInterpreter", "azureFunction", "other"],
+          "default": "other"
+        },
+        "target": {
+          "description": "id of the object the connector talks to (external system, storage account, key vault, ...); drawn as a connection.",
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+
+    "connection": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "$ref": "#/$defs/id" },
+        "to": { "$ref": "#/$defs/id" },
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "style": {
+          "enum": ["solid", "dashed", "dotted"],
+          "default": "solid"
+        },
+        "bidirectional": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}
