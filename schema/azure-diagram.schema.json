@@ -18,6 +18,7 @@
       "items": { "$ref": "#/$defs/externalSystem" }
     },
     "entra": { "$ref": "#/$defs/entraTenant" },
+    "graph": { "$ref": "#/$defs/graph" },
     "managementGroups": {
       "description": "Optional management group hierarchy. Subscriptions may live here or at the top level, not both.",
       "type": "array",
@@ -147,6 +148,19 @@
       }
     },
 
+    "graph": {
+      "description": "Microsoft Graph, the API in front of Entra ID and Microsoft 365. Connect apps and agents to it by its id.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "permissions": {
+          "description": "Graph permissions in use, e.g. ['Mail.Read (application)', 'Sites.Selected']. Shown in the cell data.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
     "servicePrincipal": {
       "allOf": [{ "$ref": "#/$defs/named" }],
       "unevaluatedProperties": false,
@@ -264,6 +278,10 @@
         "foundries": {
           "type": "array",
           "items": { "$ref": "#/$defs/foundry" }
+        },
+        "postgresServers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/postgresServer" }
         }
       }
     },
@@ -416,6 +434,30 @@
           "$ref": "#/$defs/endpoint"
         }
       }
+    },
+
+    "postgresServer": {
+      "description": "A PostgreSQL server or cluster.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "flexibleServer = Azure Database for PostgreSQL; cosmosDb = Azure Cosmos DB for PostgreSQL; horizonDb = Azure HorizonDB; singleServer = Azure Database for PostgreSQL - Single Server (legacy).",
+          "enum": ["flexibleServer", "cosmosDb", "horizonDb", "singleServer"],
+          "default": "flexibleServer"
+        },
+        "version": { "description": "PostgreSQL major version, e.g. '17'.", "type": "string" },
+        "sku": { "description": "Compute tier and size, e.g. 'GP_Standard_D4ds_v5'.", "type": "string" },
+        "databases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/postgresDatabase" }
+        }
+      }
+    },
+
+    "postgresDatabase": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false
     },
 
     "connection": {

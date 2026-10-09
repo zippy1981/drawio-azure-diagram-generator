@@ -97,9 +97,14 @@
             <mxGeometry x="324" y="40" width="48" height="48" as="geometry" />
           </mxCell>
         </object>
+        <object id="86553a5e-593c-4cd1-bed6-f30bb24e37b2" label="&lt;b&gt;Microsoft Graph&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Mail and calendar for the support agent&lt;/i&gt;" tooltip="Mail and calendar for the support agent" objectType="graph" description="Mail and calendar for the support agent" permissions="Mail.Send (application), Calendars.Read (application)">
+          <mxCell style="image;aspect=fixed;html=1;image=img/lib/azure2/web/API_Center.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="1">
+            <mxGeometry x="1088" y="60" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
         <object id="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded" label="&lt;b&gt;Contoso&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Root management group&lt;/i&gt;" tooltip="Root management group" objectType="management_group" description="Root management group">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" vertex="1" parent="1">
-            <mxGeometry x="1052" y="60" width="768" height="815" as="geometry" />
+            <mxGeometry x="1212" y="60" width="968" height="995" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/general/Management_Groups.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded">
@@ -107,7 +112,7 @@
         </mxCell>
         <object id="e62370e3-2a09-55ba-943a-95ad492c1033" label="&lt;b&gt;Contoso Prod&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Production workloads&lt;/i&gt;" tooltip="Production workloads" objectType="subscription" description="Production workloads">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded">
-            <mxGeometry x="16" y="40" width="736" height="759" as="geometry" />
+            <mxGeometry x="16" y="40" width="936" height="939" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="e62370e3-2a09-55ba-943a-95ad492c1033-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/general/Subscriptions.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="e62370e3-2a09-55ba-943a-95ad492c1033">
@@ -115,7 +120,7 @@
         </mxCell>
         <object id="bf7ea580-ced5-5af7-8b44-8ffff74a89df" label="&lt;b&gt;rg-chat-prod&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Chat application&lt;/i&gt;" tooltip="Chat application" objectType="resource_group" description="Chat application" location="eastus2">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="e62370e3-2a09-55ba-943a-95ad492c1033">
-            <mxGeometry x="16" y="40" width="704" height="703" as="geometry" />
+            <mxGeometry x="16" y="40" width="904" height="703" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="bf7ea580-ced5-5af7-8b44-8ffff74a89df-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/general/Resource_Groups.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="bf7ea580-ced5-5af7-8b44-8ffff74a89df">
@@ -180,7 +185,7 @@
         </object>
         <object id="03d28565-9ffe-5254-8090-1b22e2fc42c6" label="&lt;b&gt;aif-chat-prod&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;AI Foundry project for the chat app&lt;/i&gt;" tooltip="AI Foundry project for the chat app" objectType="foundry" description="AI Foundry project for the chat app">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="bf7ea580-ced5-5af7-8b44-8ffff74a89df">
-            <mxGeometry x="16" y="370" width="560" height="317" as="geometry" />
+            <mxGeometry x="16" y="370" width="696" height="317" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="03d28565-9ffe-5254-8090-1b22e2fc42c6-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/ai_machine_learning/AI_Foundry.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="03d28565-9ffe-5254-8090-1b22e2fc42c6">
@@ -201,7 +206,7 @@
         </object>
         <object id="6682c328-16d8-5cf1-a261-72e615f8505c" label="&lt;b&gt;Agents&lt;/b&gt;" objectType="agents">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=none;strokeColor=#999999;dashed=1;" vertex="1" parent="03d28565-9ffe-5254-8090-1b22e2fc42c6">
-            <mxGeometry x="192" y="40" width="352" height="261" as="geometry" />
+            <mxGeometry x="192" y="40" width="488" height="261" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="6682c328-16d8-5cf1-a261-72e615f8505c-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/ai_machine_learning/Bot_Services.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="6682c328-16d8-5cf1-a261-72e615f8505c">
@@ -209,7 +214,7 @@
         </mxCell>
         <object id="5e788329-7afa-59ef-8631-680c64f1cce1" label="&lt;b&gt;Support agent&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Answers customer questions&lt;/i&gt;" tooltip="Answers customer questions" objectType="agent" description="Answers customer questions" model="1c2493c3-b22e-5a8a-8c07-7598854a6820">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="6682c328-16d8-5cf1-a261-72e615f8505c">
-            <mxGeometry x="16" y="40" width="320" height="205" as="geometry" />
+            <mxGeometry x="16" y="40" width="456" height="205" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="5e788329-7afa-59ef-8631-680c64f1cce1-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/ai_machine_learning/Bot_Services.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="5e788329-7afa-59ef-8631-680c64f1cce1">
@@ -217,7 +222,7 @@
         </mxCell>
         <object id="02802dfd-7e49-50ec-8ee7-84263e6cc2e9" label="&lt;b&gt;Connectors&lt;/b&gt;" objectType="connectors">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=none;strokeColor=#999999;dashed=1;" vertex="1" parent="5e788329-7afa-59ef-8631-680c64f1cce1">
-            <mxGeometry x="16" y="40" width="288" height="149" as="geometry" />
+            <mxGeometry x="16" y="40" width="424" height="149" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="02802dfd-7e49-50ec-8ee7-84263e6cc2e9-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/networking/Connections.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="02802dfd-7e49-50ec-8ee7-84263e6cc2e9">
@@ -231,6 +236,47 @@
         <object id="99855ac3-c17f-5c52-8b36-61a535386952" label="&lt;b&gt;GitHub MCP&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Reads issues for known bugs&lt;/i&gt;" tooltip="Reads issues for known bugs" objectType="connector" description="Reads issues for known bugs" kind="mcp" target="GitHub">
           <mxCell style="image;aspect=fixed;html=1;image=img/lib/azure2/integration/Logic_Apps_Custom_Connector.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="02802dfd-7e49-50ec-8ee7-84263e6cc2e9">
             <mxGeometry x="188" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="553e0e3d-dc48-4116-9fff-202951af7717" label="&lt;b&gt;Graph mail&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Emails follow-ups to customers&lt;/i&gt;" tooltip="Emails follow-ups to customers" objectType="connector" description="Emails follow-ups to customers" kind="openapi" target="86553a5e-593c-4cd1-bed6-f30bb24e37b2">
+          <mxCell style="image;aspect=fixed;html=1;image=img/lib/azure2/integration/Logic_Apps_Custom_Connector.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="02802dfd-7e49-50ec-8ee7-84263e6cc2e9">
+            <mxGeometry x="324" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="10fbb93a-dc8b-47d5-a4a6-24a435415e80" label="&lt;b&gt;psql-chat-prod&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Users and conversation metadata&lt;/i&gt;" tooltip="Users and conversation metadata" objectType="postgres_server" description="Users and conversation metadata" kind="flexibleServer" version="17" sku="GP_Standard_D4ds_v5">
+          <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="bf7ea580-ced5-5af7-8b44-8ffff74a89df">
+            <mxGeometry x="728" y="370" width="160" height="160" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="10fbb93a-dc8b-47d5-a4a6-24a435415e80-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="10fbb93a-dc8b-47d5-a4a6-24a435415e80">
+          <mxGeometry x="8" y="8" width="24" height="24" as="geometry" />
+        </mxCell>
+        <object id="be853dd0-6245-4912-9615-b876925cd838" label="&lt;b&gt;chat&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;App database&lt;/i&gt;" tooltip="App database" objectType="postgres_database" description="App database">
+          <mxCell style="image;aspect=fixed;html=1;image=img/lib/azure2/databases/Managed_Database.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="10fbb93a-dc8b-47d5-a4a6-24a435415e80">
+            <mxGeometry x="52" y="64" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="2c619824-d7e3-46d3-9eff-39f851d688ab" label="&lt;b&gt;rg-data-prod&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Analytics and legacy data&lt;/i&gt;" tooltip="Analytics and legacy data" objectType="resource_group" description="Analytics and legacy data" location="eastus2">
+          <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="e62370e3-2a09-55ba-943a-95ad492c1033">
+            <mxGeometry x="16" y="759" width="424" height="164" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="2c619824-d7e3-46d3-9eff-39f851d688ab-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/general/Resource_Groups.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="2c619824-d7e3-46d3-9eff-39f851d688ab">
+          <mxGeometry x="8" y="8" width="24" height="24" as="geometry" />
+        </mxCell>
+        <object id="b5de44f1-749d-492e-a5ca-61dd65d276b7" label="&lt;b&gt;cosmos-pg-analytics&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Distributed usage analytics&lt;/i&gt;" tooltip="Distributed usage analytics" objectType="postgres_server" description="Distributed usage analytics" kind="cosmosDb">
+          <mxCell style="image;aspect=fixed;html=1;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server_Group.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="2c619824-d7e3-46d3-9eff-39f851d688ab">
+            <mxGeometry x="52" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="83b36fd2-c683-4cff-9447-445ba3e7fba2" label="&lt;b&gt;hdb-vectors&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Embeddings for semantic search&lt;/i&gt;" tooltip="Embeddings for semantic search" objectType="postgres_server" description="Embeddings for semantic search" kind="horizonDb">
+          <mxCell style="image;aspect=fixed;html=1;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="2c619824-d7e3-46d3-9eff-39f851d688ab">
+            <mxGeometry x="188" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="84029c61-fc3f-40ff-bc80-a4491aa3fc8b" label="&lt;b&gt;psql-legacy-billing&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Pending migration to flexible server&lt;/i&gt;" tooltip="Pending migration to flexible server" objectType="postgres_server" description="Pending migration to flexible server" kind="singleServer" version="11">
+          <mxCell style="image;aspect=fixed;html=1;image=img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="2c619824-d7e3-46d3-9eff-39f851d688ab">
+            <mxGeometry x="324" y="40" width="48" height="48" as="geometry" />
           </mxCell>
         </object>
         <object id="600ce55e-031c-5589-95a0-832c7bd48b9c" label="pulls">
@@ -250,6 +296,11 @@
         </object>
         <object id="5fee683c-e565-59f1-85f0-21fe988c98c3" label="connects to">
           <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;strokeColor=#808080;fontColor=#666666;" edge="1" parent="1" source="99855ac3-c17f-5c52-8b36-61a535386952" target="fd39e7c0-2240-54f2-9dfd-74bbe004b5a2">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="e8b5e47c-c8eb-5cde-959d-d41eb21321d0" label="connects to">
+          <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;strokeColor=#808080;fontColor=#666666;" edge="1" parent="1" source="553e0e3d-dc48-4116-9fff-202951af7717" target="86553a5e-593c-4cd1-bed6-f30bb24e37b2">
             <mxGeometry relative="1" as="geometry" />
           </mxCell>
         </object>
@@ -275,6 +326,11 @@
         </object>
         <object id="9294d041-3e1f-52c0-a73d-5c349e303057" label="pushes images">
           <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="fd39e7c0-2240-54f2-9dfd-74bbe004b5a2" target="def48140-7106-53db-b2a2-6b8d25ff0368">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="b542a159-4724-5ebc-ba3d-0bf3d409153e" label="reads/writes">
+          <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4d639f57-d445-506b-9334-ecc85a885e49" target="10fbb93a-dc8b-47d5-a4a6-24a435415e80">
             <mxGeometry relative="1" as="geometry" />
           </mxCell>
         </object>

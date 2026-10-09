@@ -27,6 +27,7 @@ azdiagram examples/sample.yaml -o sample.drawio
 │   └── Group                      box   – entra.groups[]
 │       ├── Owners                 box   – owners[]  (ref or inline principal)
 │       └── Members                box   – members[] (ref or inline principal)
+├── Microsoft Graph                icon  – graph
 ├── Management group (opt.)        box   – managementGroups[] (nestable)
 └── Subscription                   box   – subscriptions[] (top level or under an MG)
         └── Resource group         box   – resourceGroups[]
@@ -38,13 +39,15 @@ azdiagram examples/sample.yaml -o sample.drawio
             ├── Storage account    box   – storageAccounts[]
             │   └── Blob containers box  – (synthetic grouping)
             │       └── Container  icon  – blobContainers[]
-            └── AI Foundry         box   – foundries[]
-                ├── Models         box   – (synthetic grouping)
-                │   └── Deployment icon  – models[]
-                └── Agents         box   – (synthetic grouping)
-                    └── Agent      box   – agents[]
-                        └── Connectors box – (synthetic grouping)
-                            └── Connector icon – connectors[]
+            ├── AI Foundry         box   – foundries[]
+            │   ├── Models         box   – (synthetic grouping)
+            │   │   └── Deployment icon  – models[]
+            │   └── Agents         box   – (synthetic grouping)
+            │       └── Agent      box   – agents[]
+            │           └── Connectors box – (synthetic grouping)
+            │               └── Connector icon – connectors[]
+            └── PostgreSQL server  icon  – postgresServers[] (kind picks the service)
+                └── Database       icon  – databases[]
 ```
 
 "box"/"icon" above is the usual outcome; the real rule is dynamic (see 3.2).
@@ -124,7 +127,8 @@ No draw.io install needed at runtime.
 ### 3.2 Build the node tree (`build.py`)
 
 Turn the dict into a uniform `Node` tree. Top-level sections, in order:
-**External** (a box holding the external systems), the **Entra tenant**, each
+**External** (a box holding the external systems), the **Entra tenant**,
+**Microsoft Graph**, each
 top-level **management group**, then each top-level **subscription**. Empty
 sections are dropped.
 
@@ -172,6 +176,18 @@ needs no embedded images. Every path below was checked to exist in the
 | Agents (group) / Agent     | `ai_machine_learning/Bot_Services.svg`        |
 | Connectors (group)         | `networking/Connections.svg`                  |
 | Connector                  | `integration/Logic_Apps_Custom_Connector.svg` |
+| Microsoft Graph            | `web/API_Center.svg`                          |
+
+PostgreSQL servers pick their icon by `kind`:
+
+| `kind`           | service                                                | icon                                                                                    |
+|------------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `flexibleServer` | Azure Database for PostgreSQL (default)                | `databases/Azure_Database_PostgreSQL_Server.svg`                                        |
+| `cosmosDb`       | Azure Cosmos DB for PostgreSQL                         | `databases/Azure_Database_PostgreSQL_Server_Group.svg`                                  |
+| `horizonDb`      | Azure HorizonDB (no icon of its own yet)               | `databases/Azure_Database_PostgreSQL_Server.svg`                                        |
+| `singleServer`   | Azure Database for PostgreSQL - Single Server (legacy) | `img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg` (older set, so it stands out) |
+
+Their databases use `databases/Managed_Database.svg`.
 
 A per-object `icon:` overrides the table.
 
@@ -278,7 +294,7 @@ All in `tests/test_azdiagram.py`:
   boxes, so in busy diagrams they cross labels. ELK (via elkjs) is the likely
   fix; in the meantime draw.io's Arrange → Layout helps.
 
-- More resource types (VNets/subnets, App Service, Cosmos DB, SQL) – each is a
+- More resource types (VNets/subnets, App Service, Cosmos DB NoSQL, SQL) – each is a
   schema `$def`, a list on `resourceGroup`, and an icon row.
 - Importing from Azure (`az graph query`) or Bicep/Terraform state to produce
   the YAML.

@@ -36,7 +36,9 @@ CHILDREN = {
         ("containerApps", "container_app", None, None),
         ("storageAccounts", "storage_account", None, None),
         ("foundries", "foundry", None, None),
+        ("postgresServers", "postgres_server", None, None),
     ],
+    "postgres_server": [("databases", "postgres_database", None, None)],
     "container_app": [("containers", "container", None, None)],
     "container_registry": [("repositories", "repository", None, None)],
     "storage_account": [("blobContainers", "blob_container", "blob_containers", "Blob containers")],
@@ -56,7 +58,7 @@ REFERENCES = {
 }
 
 # kinds whose `kind` field picks an icon variant, with its default
-VARIANT_DEFAULTS = {"external": "system", "service_principal": "application"}
+VARIANT_DEFAULTS = {"external": "system", "service_principal": "application", "postgres_server": "flexibleServer"}
 
 PRINCIPAL_KINDS = {"user": "user", "group": "group", "servicePrincipal": "service_principal"}
 
@@ -212,6 +214,8 @@ def build(
 
     if doc.get("entra"):
         sections.append(b.obj("entra_tenant", doc["entra"], "entra", ["entra"]))
+    if doc.get("graph"):
+        sections.append(b.obj("graph", doc["graph"], "graph", ["graph"]))
     for i, mg in enumerate(doc.get("managementGroups") or []):
         sections.append(b.obj("management_group", mg, f"managementGroups[{i}]", []))
     for i, sub in enumerate(doc.get("subscriptions") or []):

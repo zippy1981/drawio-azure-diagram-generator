@@ -139,3 +139,27 @@ def test_cli(tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text("version: 1\nexternal:\n  - description: no name\n")
     assert main([str(bad), "--validate-only"]) == 1
+
+
+def test_postgres_kinds_pick_icons(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert nodes["psql-chat-prod"].icon.endswith("azure2/databases/Azure_Database_PostgreSQL_Server.svg")
+    assert nodes["cosmos-pg-analytics"].icon.endswith("Azure_Database_PostgreSQL_Server_Group.svg")
+    assert nodes["hdb-vectors"].icon.endswith("azure2/databases/Azure_Database_PostgreSQL_Server.svg")
+    assert nodes["psql-legacy-billing"].icon == "img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg"
+    assert nodes["psql-legacy-billing"].props["kind"] == "singleServer"
+    assert [c.name for c in nodes["psql-chat-prod"].children] == ["chat"]
+
+
+def test_graph_is_a_top_level_section(doc):
+    diagram = build(doc)
+    assert [s.kind for s in diagram.sections] == ["external_section", "entra_tenant", "graph", "management_group"]
+    graph = diagram.sections[2]
+    assert any(e.target == graph.id and e.label == "connects to" for e in diagram.edges)
+
+
+def test_schema_rejects_unknown_postgres_kind(doc):
+    rg = doc["managementGroups"][0]["subscriptions"][0]["resourceGroups"][1]
+    rg["postgresServers"][0]["kind"] = "mysql"
+    with pytest.raises(ValidationFailed):
+        validate(doc)

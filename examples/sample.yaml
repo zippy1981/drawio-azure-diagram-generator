@@ -48,6 +48,12 @@ entra:
           name: Carol (contractor)
           description: Guest account
 
+graph:
+  id: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+  name: Microsoft Graph
+  description: Mail and calendar for the support agent
+  permissions: [Mail.Send (application), Calendars.Read (application)]
+
 managementGroups:
   - id: f1ce00c0-d4cc-59d6-b96f-fed6fa042ded
     name: Contoso
@@ -123,6 +129,40 @@ managementGroups:
                         description: Reads issues for known bugs
                         kind: mcp
                         target: GitHub
+                      - id: 553e0e3d-dc48-4116-9fff-202951af7717
+                        name: Graph mail
+                        description: Emails follow-ups to customers
+                        kind: openapi
+                        target: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+            postgresServers:
+              - id: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
+                name: psql-chat-prod
+                description: Users and conversation metadata
+                kind: flexibleServer
+                version: "17"
+                sku: GP_Standard_D4ds_v5
+                databases:
+                  - id: be853dd0-6245-4912-9615-b876925cd838
+                    name: chat
+                    description: App database
+          - id: 2c619824-d7e3-46d3-9eff-39f851d688ab
+            name: rg-data-prod
+            description: Analytics and legacy data
+            location: eastus2
+            postgresServers:
+              - id: b5de44f1-749d-492e-a5ca-61dd65d276b7
+                name: cosmos-pg-analytics
+                description: Distributed usage analytics
+                kind: cosmosDb
+              - id: 83b36fd2-c683-4cff-9447-445ba3e7fba2
+                name: hdb-vectors
+                description: Embeddings for semantic search
+                kind: horizonDb
+              - id: 84029c61-fc3f-40ff-bc80-a4491aa3fc8b
+                name: psql-legacy-billing
+                description: Pending migration to flexible server
+                kind: singleServer
+                version: "11"
 
 connections:
   - from: Customers
@@ -138,3 +178,6 @@ connections:
   - from: GitHub
     to: def48140-7106-53db-b2a2-6b8d25ff0368
     label: pushes images
+  - from: 4d639f57-d445-506b-9334-ecc85a885e49
+    to: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
+    label: reads/writes
