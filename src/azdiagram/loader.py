@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from importlib import resources
 from pathlib import Path
+from typing import Any, cast
 
 import jsonschema
 import yaml
@@ -12,19 +13,24 @@ import yaml
 SCHEMA_NAME = "azure-diagram.schema.json"
 
 
-class ValidationFailed(Exception):
-    def __init__(self, errors: list[str]):
+class SchemaValidationError(Exception):
+    """The document does not match the JSON Schema; `errors` holds one message per problem."""
+
+    def __init__(self, errors: list[str]) -> None:
+        """Store the individual error messages."""
         super().__init__("\n".join(errors))
         self.errors = errors
 
 
-def load_schema() -> dict:
+def load_schema() -> dict[str, Any]:
+    """Return the JSON Schema, from the installed package or else the source checkout."""
     packaged = resources.files("azdiagram").joinpath(SCHEMA_NAME)
-    if packaged.is_file():
-        return json.loads(packaged.read_text(encoding="utf-8"))
-    # Running from a source checkout.
-    repo_copy = Path(__file__).resolve().parents[2] / "schema" / SCHEMA_NAME
-    return json.loads(repo_copy.read_text(encoding="utf-8"))
+    text = packaged.read_text(encoding="utf-8") if packaged.is_file() else _repo_schema().read_text(encoding="utf-8")
+    return cast("dict[str, Any]", json.loads(text))
+
+
+def _repo_schema() -> Path:
+    return Path(__file__).resolve().parents[2] / "schema" / SCHEMA_NAME
 
 
 def _path(error: jsonschema.ValidationError) -> str:
@@ -34,15 +40,18 @@ def _path(error: jsonschema.ValidationError) -> str:
     return out or "(root)"
 
 
-def validate(doc) -> None:
+def validate(doc: object) -> None:
+    """Raise SchemaValidationError listing every schema violation in `doc`."""
     validator = jsonschema.Draft202012Validator(load_schema())
-    errors = sorted(validator.iter_errors(doc), key=lambda e: list(map(str, e.absolute_path)))
+    errors = sorted(validator.iter_errors(doc), key=lambda e: [str(p) for p in e.absolute_path])
     if errors:
-        raise ValidationFailed([f"{_path(e)}: {e.message}" for e in errors])
+        raise SchemaValidationError([f"{_path(e)}: {e.message}" for e in errors])
 
 
-def load(path: str | Path) -> dict:
+def load(path: str | Path) -> dict[str, Any]:
+    """Read and validate a YAML document."""
     with open(path, encoding="utf-8") as f:
-        doc = yaml.safe_load(f)
+        doc: object = yaml.safe_load(f)
     validate(doc)
-    return doc
+    # The schema's root is an object, so a valid document is a mapping.
+    return cast("dict[str, Any]", doc)

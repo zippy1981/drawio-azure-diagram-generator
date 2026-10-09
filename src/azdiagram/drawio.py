@@ -5,10 +5,13 @@ from __future__ import annotations
 import html
 import re
 import xml.etree.ElementTree as ET
+from typing import TYPE_CHECKING
 
 from .build import derive_id
 from .layout import HEADER_ICON, HEADER_ICON_INSET, HEADER_TEXT_LEFT, ICON, LEAF_W, MARGIN, TITLE_H
-from .model import Diagram, Edge, Node
+
+if TYPE_CHECKING:
+    from .model import Diagram, Edge, Node
 
 # kind -> (fillColor, strokeColor, dashed)
 BOX_COLORS = {
@@ -39,7 +42,7 @@ def _label(name: str, description: str, show_descriptions: bool) -> str:
 
 
 def _user_object(root: ET.Element, cell_id: str, label: str, attrs: dict[str, str]) -> ET.Element:
-    """An <object> wrapper so description/props show up in draw.io's Edit Data dialog."""
+    """Add an <object> wrapper so description and props show up in draw.io's Edit Data dialog."""
     obj = ET.SubElement(root, "object", {"id": cell_id, "label": label})
     for key, value in attrs.items():
         if value != "" and XML_NAME.match(key):
@@ -120,6 +123,7 @@ def _emit_edge(root: ET.Element, edge: Edge) -> None:
 
 
 def to_drawio(diagram: Diagram) -> str:
+    """Serialize a laid-out diagram as uncompressed draw.io XML."""
     mxfile = ET.Element("mxfile", {"host": "azdiagram"})
     page = ET.SubElement(mxfile, "diagram", {"id": diagram.id, "name": diagram.page_name})
     model = ET.SubElement(

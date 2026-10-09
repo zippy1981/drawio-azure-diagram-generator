@@ -2,7 +2,7 @@
 
 BASE = "img/lib/azure2/"
 
-KIND_ICONS = {
+KIND_ICONS: dict[str, str] = {
     "external_section": "general/Globe.svg",
     "entra_tenant": "identity/Azure_Active_Directory.svg",
     "user": "identity/Users.svg",
@@ -30,7 +30,7 @@ KIND_ICONS = {
 }
 
 # (kind, variant) overrides, e.g. the `kind` field of an external system or service principal.
-VARIANT_ICONS = {
+VARIANT_ICONS: dict[tuple[str, str], str] = {
     ("external", "system"): "general/Server_Farm.svg",
     ("external", "saas"): "general/Globe.svg",
     ("external", "internet"): "general/Globe.svg",
@@ -42,7 +42,8 @@ VARIANT_ICONS = {
 
 
 def icon_for(kind: str, variant: str | None = None) -> str:
-    path = VARIANT_ICONS.get((kind, variant)) or KIND_ICONS.get(kind)
+    """Return the draw.io image path for a node kind, honouring an optional variant."""
+    path = (VARIANT_ICONS.get((kind, variant)) if variant else None) or KIND_ICONS.get(kind)
     if path is None:
         raise KeyError(f"no icon for kind {kind!r} (variant {variant!r})")
     return BASE + path

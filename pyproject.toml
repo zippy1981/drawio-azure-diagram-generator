@@ -12,6 +12,7 @@ dependencies = ["PyYAML>=6", "jsonschema>=4.18"]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+lint = ["ruff==0.16.8", "mypy==2.3.1", "types-PyYAML", "types-jsonschema"]
 
 [project.scripts]
 azdiagram = "azdiagram.cli:main"
@@ -25,3 +26,41 @@ packages = ["src/azdiagram"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle: PEP 8 style
+    "F",       # pyflakes
+    "I",       # isort: PEP 8 import grouping and order
+    "N",       # pep8-naming: PEP 8 naming conventions
+    "D",       # pydocstyle: PEP 257 docstrings
+    "UP",      # pyupgrade: modern syntax, PEP 585/604 annotations
+    "ANN",     # flake8-annotations: PEP 484 type hints on every function
+    "FA",      # postponed annotations (PEP 563) where newer syntax is used
+    "TC",      # imports used only for typing
+    "B",       # bugbear
+    "C4",      # comprehensions
+    "SIM",     # simplifications
+    "PT",      # pytest style
+    "RUF",     # ruff-specific
+]
+ignore = [
+    "D105",  # magic methods
+    "D107",  # __init__ is documented on the class
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]  # test names describe themselves
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+files = ["src", "tests"]
+warn_unreachable = true
