@@ -310,6 +310,10 @@
           "type": "array",
           "items": { "$ref": "#/$defs/foundry" }
         },
+        "bingResources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bingResource" }
+        },
         "postgresServers": {
           "type": "array",
           "items": { "$ref": "#/$defs/postgresServer" }
@@ -463,12 +467,46 @@
       "properties": {
         "kind": {
           "description": "Tool / connector type.",
-          "enum": ["mcp", "openapi", "azureAISearch", "bingGrounding", "fileSearch", "codeInterpreter", "azureFunction", "other"],
+          "enum": ["mcp", "openapi", "azureAISearch", "bingGrounding", "bingCustomSearch", "fileSearch", "codeInterpreter", "azureFunction", "other"],
           "default": "other"
         },
         "target": {
-          "description": "What the connector talks to: an object's UUID id or an external system's name; drawn as a connection.",
+          "description": "What the connector talks to: any object's UUID id (an Azure resource, Microsoft Graph, a Microsoft 365 app, ...) or an external system's name; drawn as a connection.",
           "$ref": "#/$defs/endpoint"
+        }
+      }
+    },
+
+    "bingResource": {
+      "description": "A Grounding with Bing resource (Microsoft.Bing/accounts). These are global resources: they live in a resource group but have no region.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "search = Grounding with Bing Search; customSearch = Grounding with Bing Custom Search.",
+          "enum": ["search", "customSearch"],
+          "default": "search"
+        },
+        "sku": { "description": "e.g. 'G1'.", "type": "string" },
+        "configurations": {
+          "description": "Custom search configurations (customSearch only).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/bingConfiguration" }
+        }
+      },
+      "if": { "required": ["kind"], "properties": { "kind": { "const": "customSearch" } } },
+      "else": { "not": { "required": ["configurations"] } }
+    },
+
+    "bingConfiguration": {
+      "description": "A Bing Custom Search configuration: the set of sites it searches.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "sites": {
+          "description": "Domains or URL prefixes to search, e.g. ['learn.microsoft.com', 'contoso.com/docs'].",
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },

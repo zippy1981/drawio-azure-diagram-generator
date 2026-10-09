@@ -36,9 +36,11 @@ CHILDREN = {
         ("containerApps", "container_app", None, None),
         ("storageAccounts", "storage_account", None, None),
         ("foundries", "foundry", None, None),
+        ("bingResources", "bing_resource", None, None),
         ("postgresServers", "postgres_server", None, None),
         ("virtualNetworks", "virtual_network", None, None),
     ],
+    "bing_resource": [("configurations", "bing_configuration", None, None)],
     "virtual_network": [("subnets", "subnet", None, None)],
     "postgres_server": [("databases", "postgres_database", None, None)],
     "m365": [("apps", "m365_app", None, None)],
@@ -65,6 +67,7 @@ VARIANT_DEFAULTS = {
     "service_principal": "application",
     "postgres_server": "flexibleServer",
     "m365_app": "other",
+    "bing_resource": "search",
 }
 
 PRINCIPAL_KINDS = {"user": "user", "group": "group", "servicePrincipal": "service_principal"}

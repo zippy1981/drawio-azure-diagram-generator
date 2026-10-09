@@ -34,6 +34,8 @@ KIND_ICONS = {
     "postgres_server": "databases/Azure_Database_PostgreSQL_Server.svg",
     "postgres_database": "databases/Managed_Database.svg",
     "virtual_network": "networking/Virtual_Networks.svg",
+    "bing_resource": "general/Search.svg",
+    "bing_configuration": "general/Globe.svg",
     "subnet": "networking/Subnet.svg",
     "m365": M365_BASE + "m365_48x1.svg",
     "m365_app": M365_BASE + "office_48x1.svg",
@@ -52,6 +54,9 @@ VARIANT_ICONS = {
     ("postgres_server", "flexibleServer"): "databases/Azure_Database_PostgreSQL_Server.svg",
     ("postgres_server", "cosmosDb"): "databases/Azure_Database_PostgreSQL_Server_Group.svg",
     ("postgres_server", "singleServer"): "img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg",
+    # draw.io has no Bing icons.
+    ("bing_resource", "search"): "general/Search.svg",
+    ("bing_resource", "customSearch"): "general/Search_Grid.svg",
     # The CDN has no Exchange icon; Outlook's is the closest match.
     **{
         ("m365_app", app): f"{M365_BASE}{icon}_48x1.svg"

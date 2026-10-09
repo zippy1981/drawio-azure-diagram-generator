@@ -219,3 +219,32 @@ def test_virtual_network_holds_subnets(doc):
     assert vnet.props["addressSpace"] == "10.10.0.0/16"
     assert [c.name for c in vnet.children] == ["snet-apps", "snet-data"]
     assert nodes["snet-apps"].props["delegation"] == "Microsoft.App/environments"
+
+
+def test_connectors_reach_graph_m365_external_and_bing(doc):
+    diagram = build(doc)
+    nodes = {n.name: n for n in _nodes(diagram).values()}
+    edges = {(e.source, e.target) for e in diagram.edges if e.label == "connects to"}
+    for connector, target in [
+        ("Graph mail", "Microsoft Graph"),
+        ("Inbox", "Outlook"),
+        ("GitHub MCP", "GitHub"),
+        ("Web search", "bing-grounding"),
+        ("Docs web search", "product-docs"),
+    ]:
+        sources = [n.id for n in _nodes(diagram).values() if n.name == connector]
+        assert any((s, nodes[target].id) in edges for s in sources), connector
+
+
+def test_bing_resources(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert nodes["bing-grounding"].icon.endswith("general/Search.svg")
+    assert nodes["bing-custom-docs"].icon.endswith("general/Search_Grid.svg")
+    assert nodes["product-docs"].props["sites"] == "contoso.com/docs, learn.microsoft.com"
+
+
+def test_schema_allows_configurations_only_on_custom_search(doc):
+    rg = doc["managementGroups"][0]["subscriptions"][0]["resourceGroups"][0]
+    rg["bingResources"][0]["configurations"] = [{"name": "nope"}]
+    with pytest.raises(ValidationFailed):
+        validate(doc)

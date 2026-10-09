@@ -175,6 +175,11 @@ managementGroups:
                         description: Emails follow-ups to customers
                         kind: openapi
                         target: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+                      - id: 6815184a-a424-488a-8c66-414ad9aeaf7f
+                        name: Web search
+                        description: Looks up public answers
+                        kind: bingGrounding
+                        target: eee8fa51-42fa-4d92-aacf-666121206087
                   - id: 942759ad-3694-493b-8afd-9369ae2a7d5c
                     name: Triage agent
                     description: Sorts incoming support mail
@@ -190,6 +195,26 @@ managementGroups:
                         description: Reads and labels support mail
                         kind: mcp
                         target: 58b1554e-f8f6-4685-8761-d07462b17655
+                      - id: ff76a249-4c16-45e8-ab30-31334368364f
+                        name: Docs web search
+                        description: Checks the product docs
+                        kind: bingCustomSearch
+                        target: f7a4840c-4db7-416f-91ee-ede077597127
+            bingResources:
+              - id: eee8fa51-42fa-4d92-aacf-666121206087
+                name: bing-grounding
+                description: Web search for agents
+                kind: search
+                sku: G1
+              - id: 878c3e55-eaed-492a-8c08-a78dba3b3cd4
+                name: bing-custom-docs
+                description: Search limited to product docs
+                kind: customSearch
+                configurations:
+                  - id: f7a4840c-4db7-416f-91ee-ede077597127
+                    name: product-docs
+                    description: Contoso and Microsoft docs
+                    sites: [contoso.com/docs, learn.microsoft.com]
             postgresServers:
               - id: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
                 name: psql-chat-prod

@@ -48,6 +48,8 @@ azdiagram examples/sample.yaml -o sample.drawio
             │       └── Agent      box   – agents[]
             │           └── Connectors box – (synthetic grouping)
             │               └── Connector icon – connectors[]
+            ├── Bing resource      icon  – bingResources[] (global; kind: search | customSearch)
+            │   └── Configuration  icon  – configurations[] (customSearch only)
             ├── PostgreSQL server  icon  – postgresServers[] (kind picks the service)
             │   └── Database       icon  – databases[]
             └── Virtual network    box   – virtualNetworks[]
@@ -85,7 +87,9 @@ external names must be unique. Internally they still get a UUIDv5 of
   (dashed, "uses"). Model deployments have no `id` (see
   [ADR 0013](docs/adr/0013-model-deployments-referenced-by-name.md)), so
   deployment names must be unique within a foundry.
-- `connector.target` → any object (dashed, "connects to").
+- `connector.target` → any object with an id (Azure resources, Microsoft Graph,
+  Microsoft 365 apps, Bing configurations, ...) or an external system by name
+  (dashed, "connects to").
 - `group.owners/members[].ref` → render a copy of the referenced principal's icon
   inside the Owners/Members box (no arrow, to keep the Entra box readable).
 
@@ -187,6 +191,9 @@ needs no embedded images. Every path below was checked to exist in the
 | Connector                  | `integration/Logic_Apps_Custom_Connector.svg` |
 | Microsoft Graph            | `web/API_Center.svg`                          |
 | Virtual network            | `networking/Virtual_Networks.svg`             |
+| Bing Search (grounding)    | `general/Search.svg`                          |
+| Bing Custom Search         | `general/Search_Grid.svg`                     |
+| Bing custom configuration  | `general/Globe.svg`                           |
 | Subnet                     | `networking/Subnet.svg`                       |
 
 PostgreSQL servers pick their icon by `kind`:
