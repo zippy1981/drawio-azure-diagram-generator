@@ -313,6 +313,10 @@
         "postgresServers": {
           "type": "array",
           "items": { "$ref": "#/$defs/postgresServer" }
+        },
+        "virtualNetworks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/virtualNetwork" }
         }
       }
     },
@@ -424,7 +428,8 @@
     },
 
     "modelDeployment": {
-      "allOf": [{ "$ref": "#/$defs/named" }],
+      "description": "A model deployment. Has no id; agents refer to it by its name, which must be unique within the foundry.",
+      "allOf": [{ "$ref": "#/$defs/base" }],
       "unevaluatedProperties": false,
       "properties": {
         "model": { "description": "Base model name, e.g. 'gpt-4.1'.", "type": "string" },
@@ -439,8 +444,9 @@
       "unevaluatedProperties": false,
       "properties": {
         "model": {
-          "description": "id of the modelDeployment the agent uses; drawn as a dashed connection.",
-          "$ref": "#/$defs/id"
+          "description": "Name of the model deployment (in the same foundry) the agent uses; drawn as a dashed connection.",
+          "type": "string",
+          "minLength": 1
         },
         "instructions": { "type": "string" },
         "connectors": {
@@ -463,6 +469,34 @@
         "target": {
           "description": "What the connector talks to: an object's UUID id or an external system's name; drawn as a connection.",
           "$ref": "#/$defs/endpoint"
+        }
+      }
+    },
+
+    "virtualNetwork": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "addressSpace": {
+          "description": "Address prefixes, e.g. ['10.0.0.0/16'].",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subnets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/subnet" }
+        }
+      }
+    },
+
+    "subnet": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "addressPrefix": { "description": "e.g. '10.0.1.0/24'.", "type": "string" },
+        "delegation": {
+          "description": "Service the subnet is delegated to, e.g. 'Microsoft.App/environments'.",
+          "type": "string"
         }
       }
     },

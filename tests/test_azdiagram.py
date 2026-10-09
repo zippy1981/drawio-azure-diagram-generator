@@ -32,13 +32,18 @@ def test_sample_is_valid(doc):
         lambda d: d["entra"]["users"][0].__setitem__("bogus", 1),
         lambda d: d["entra"]["servicePrincipals"][0].__setitem__("kind", "robot"),
         lambda d: d["entra"]["groups"][0]["owners"][0].__setitem__("ref", "alice"),
+        lambda d: _foundry(d)["models"][0].__setitem__("id", UUID_A),
     ],
-    ids=["missing-name", "external-id", "non-uuid-id", "unknown-key", "bad-enum", "non-uuid-ref"],
+    ids=["missing-name", "external-id", "non-uuid-id", "unknown-key", "bad-enum", "non-uuid-ref", "model-id"],
 )
 def test_schema_rejects(doc, mutate):
     mutate(doc)
     with pytest.raises(ValidationFailed):
         validate(doc)
+
+
+def _foundry(doc):
+    return doc["managementGroups"][0]["subscriptions"][0]["resourceGroups"][0]["foundries"][0]
 
 
 def _nodes(diagram):
@@ -91,8 +96,10 @@ def test_externals_referenced_by_name(doc):
             "expected service_principal",
         ),
         (lambda d: d["entra"]["users"][1].__setitem__("id", d["entra"]["users"][0]["id"]), "duplicate id"),
+        (lambda d: _foundry(d)["agents"][0].__setitem__("model", "gpt-nope"), "no model deployment named 'gpt-nope'"),
+        (lambda d: _foundry(d)["models"].append({"name": "gpt-chat"}), "duplicate model deployment name"),
     ],
-    ids=["unknown-external", "unknown-uuid", "wrong-kind", "duplicate-id"],
+    ids=["unknown-external", "unknown-uuid", "wrong-kind", "duplicate-id", "unknown-model", "duplicate-model"],
 )
 def test_reference_errors(doc, mutate, message):
     mutate(doc)
@@ -195,3 +202,20 @@ def test_agent_connects_to_m365_app_and_postgres(doc):
     assert (nodes["Inbox"].id, outlook.id, "connects to") in edges
     assert (nodes["Customer lookup"].id, db.id, "connects to") in edges
     assert (outlook.id, agent.id, "new mail") in edges
+
+
+def test_agents_reference_models_by_name(doc):
+    diagram = build(doc)
+    nodes = {n.name: n for n in _nodes(diagram).values()}
+    model = nodes["gpt-chat"]
+    for agent in ("Support agent", "Triage agent"):
+        assert any(e.source == nodes[agent].id and e.target == model.id and e.label == "uses" for e in diagram.edges)
+
+
+def test_virtual_network_holds_subnets(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    vnet = nodes["vnet-chat-prod"]
+    assert vnet.icon.endswith("networking/Virtual_Networks.svg")
+    assert vnet.props["addressSpace"] == "10.10.0.0/16"
+    assert [c.name for c in vnet.children] == ["snet-apps", "snet-data"]
+    assert nodes["snet-apps"].props["delegation"] == "Microsoft.App/environments"

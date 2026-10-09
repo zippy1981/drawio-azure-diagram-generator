@@ -33,6 +33,8 @@ KIND_ICONS = {
     "connector": "integration/Logic_Apps_Custom_Connector.svg",
     "postgres_server": "databases/Azure_Database_PostgreSQL_Server.svg",
     "postgres_database": "databases/Managed_Database.svg",
+    "virtual_network": "networking/Virtual_Networks.svg",
+    "subnet": "networking/Subnet.svg",
     "m365": M365_BASE + "m365_48x1.svg",
     "m365_app": M365_BASE + "office_48x1.svg",
 }

@@ -48,22 +48,24 @@ azdiagram examples/sample.yaml -o sample.drawio
             │       └── Agent      box   – agents[]
             │           └── Connectors box – (synthetic grouping)
             │               └── Connector icon – connectors[]
-            └── PostgreSQL server  icon  – postgresServers[] (kind picks the service)
-                └── Database       icon  – databases[]
+            ├── PostgreSQL server  icon  – postgresServers[] (kind picks the service)
+            │   └── Database       icon  – databases[]
+            └── Virtual network    box   – virtualNetworks[]
+                └── Subnet         icon  – subnets[]
 ```
 
 "box"/"icon" above is the usual outcome; the real rule is dynamic (see 3.2).
 
 ### Common fields (every object)
 
-| field         | required | purpose                                                                                            |
-|---------------|----------|----------------------------------------------------------------------------------------------------|
-| `name`        | yes      | first line of the label                                                                            |
-| `description` | no       | second line of the label + tooltip                                                                 |
-| `id`          | no       | UUID; target for `ref`, `connections`, `identity`, `target`, ... (not allowed on external systems) |
-| `icon`        | no       | override the default icon                                                                          |
-| `style`       | no       | raw draw.io style appended to the generated one                                                    |
-| `tags`        | no       | key/value metadata stored as custom cell properties                                                |
+| field         | required | purpose                                                                                                                 |
+|---------------|----------|-------------------------------------------------------------------------------------------------------------------------|
+| `name`        | yes      | first line of the label                                                                                                 |
+| `description` | no       | second line of the label + tooltip                                                                                      |
+| `id`          | no       | UUID; target for `ref`, `connections`, `identity`, `target`, ... (not allowed on external systems or model deployments) |
+| `icon`        | no       | override the default icon                                                                                               |
+| `style`       | no       | raw draw.io style appended to the generated one                                                                         |
+| `tags`        | no       | key/value metadata stored as custom cell properties                                                                     |
 
 All ids are UUIDs (e.g. the Entra object id or Azure resource GUID). Ids that
 are omitted are derived as a UUIDv5 of the object's name path
@@ -79,7 +81,10 @@ external names must be unique. Internally they still get a UUIDv5 of
 - `connections[]` – generic `from`/`to` by UUID (or external name), with `label`, `style`, `bidirectional`.
 - `containerApp.identity` → service principal (dashed, "runs as").
 - `container.imageRef` → repository (dashed, "pulls").
-- `agent.model` → model deployment (dashed, "uses").
+- `agent.model` → model deployment **by name**, within the agent's own foundry
+  (dashed, "uses"). Model deployments have no `id` (see
+  [ADR 0013](docs/adr/0013-model-deployments-referenced-by-name.md)), so
+  deployment names must be unique within a foundry.
 - `connector.target` → any object (dashed, "connects to").
 - `group.owners/members[].ref` → render a copy of the referenced principal's icon
   inside the Owners/Members box (no arrow, to keep the Entra box readable).
@@ -120,10 +125,12 @@ No draw.io install needed at runtime.
 3. Semantic checks the schema can't express (done while building, in `build.py`):
    - ids are unique across the whole document (explicit + derived), and
      external system names are unique;
-   - every `ref`, `identity`, `imageRef`, `model` resolves to a UUID id;
+   - every `ref`, `identity`, `imageRef` resolves to a UUID id, and every
+     agent `model` to a model deployment of that name in the same foundry;
      every `from`, `to`, `target` resolves to a UUID id or, failing that, an
      external system name; `identity` must point at a service principal, `imageRef` at a
-     repository, `model` at a model deployment;
+     repository;
+   - model deployment names are unique within their foundry;
    - `ref` inside owners/members points at a user, group or service principal.
 
 ### 3.2 Build the node tree (`build.py`)
@@ -179,6 +186,8 @@ needs no embedded images. Every path below was checked to exist in the
 | Connectors (group)         | `networking/Connections.svg`                  |
 | Connector                  | `integration/Logic_Apps_Custom_Connector.svg` |
 | Microsoft Graph            | `web/API_Center.svg`                          |
+| Virtual network            | `networking/Virtual_Networks.svg`             |
+| Subnet                     | `networking/Subnet.svg`                       |
 
 PostgreSQL servers pick their icon by `kind`:
 
@@ -305,7 +314,8 @@ All in `tests/test_azdiagram.py`:
   boxes, so in busy diagrams they cross labels. ELK (via elkjs) is the likely
   fix; in the meantime draw.io's Arrange → Layout helps.
 
-- More resource types (VNets/subnets, App Service, Cosmos DB NoSQL, SQL) – each is a
+- Placing resources inside subnets (VNet integration, private endpoints).
+- More resource types (App Service, Cosmos DB NoSQL, SQL) – each is a
   schema `$def`, a list on `resourceGroup`, and an icon row.
 - Importing from Azure (`az graph query`) or Bicep/Terraform state to produce
   the YAML.
