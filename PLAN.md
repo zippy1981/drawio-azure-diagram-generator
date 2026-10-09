@@ -56,17 +56,23 @@ azdiagram examples/sample.yaml -o sample.drawio
 |---------------|----------|------------------------------------------------------------|
 | `name`        | yes      | first line of the label                                    |
 | `description` | no       | second line of the label + tooltip                         |
-| `id`          | no       | target for `ref`, `connections`, `identity`, `target`, ... |
+| `id`          | no       | UUID; target for `ref`, `connections`, `identity`, `target`, ... (not allowed on external systems) |
 | `icon`        | no       | override the default icon                                  |
 | `style`       | no       | raw draw.io style appended to the generated one            |
 | `tags`        | no       | key/value metadata stored as custom cell properties        |
 
-Ids that are omitted are derived from the name path
-(`sub-prod/rg-chat-prod/kv-chat-prod` → slugified) so they're stable across runs.
+All ids are UUIDs (e.g. the Entra object id or Azure resource GUID). Ids that
+are omitted are derived as a UUIDv5 of the object's name path
+(`Contoso Prod/rg-chat-prod/kv-chat-prod`), so they're stable across runs.
+
+External systems have no `id`. They are referenced by `name` wherever an
+endpoint is expected (`connections[].from/to`, `connector.target`), so
+external names must be unique. Internally they still get a UUIDv5 of
+`external/<name>` for their draw.io cell id.
 
 ### Cross references (drawn as arrows)
 
-- `connections[]` – generic `from`/`to` by id, with `label`, `style`, `bidirectional`.
+- `connections[]` – generic `from`/`to` by UUID (or external name), with `label`, `style`, `bidirectional`.
 - `containerApp.identity` → service principal (dashed, "runs as").
 - `container.imageRef` → repository (dashed, "pulls").
 - `agent.model` → model deployment (dashed, "uses").
@@ -104,9 +110,11 @@ No draw.io install needed at runtime.
 2. Validate against the JSON Schema; print every error with its YAML path
    (`entra.groups[0].members[2]: 'name' is a required property`) and exit 1.
 3. Semantic checks the schema can't express:
-   - ids are unique across the whole document (explicit + derived);
-   - every `ref`, `from`, `to`, `identity`, `imageRef`, `model`, `target`
-     resolves; `identity` must point at a service principal, `imageRef` at a
+   - ids are unique across the whole document (explicit + derived), and
+     external system names are unique;
+   - every `ref`, `identity`, `imageRef`, `model` resolves to a UUID id;
+     every `from`, `to`, `target` resolves to a UUID id or, failing that, an
+     external system name; `identity` must point at a service principal, `imageRef` at a
      repository, `model` at a model deployment;
    - `ref` inside owners/members points at a user, group or service principal.
 
@@ -232,7 +240,7 @@ Default output is `INPUT.drawio` next to the input. Exit codes: 0 ok,
 ## 5. Testing
 
 - `test_schema.py`: sample validates; table of invalid docs (missing name,
-  unknown key, bad enum, bad id pattern) each fails.
+  unknown key, bad enum, non-UUID id, `id` on an external system) each fails.
 - `test_build.py`: synthetic groupings appear only when non-empty; box/icon
   rule; derived ids are stable; unresolved/mistyped refs raise clear errors.
 - `test_layout.py`: children never overlap and stay inside the parent;

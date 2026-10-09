@@ -29,7 +29,7 @@
       "items": { "$ref": "#/$defs/subscription" }
     },
     "connections": {
-      "description": "Arrows between any two objects, referenced by id.",
+      "description": "Arrows between any two objects, referenced by UUID id (or by name for external systems).",
       "type": "array",
       "items": { "$ref": "#/$defs/connection" }
     }
@@ -37,17 +37,30 @@
 
   "$defs": {
     "id": {
-      "description": "Unique identifier used for references and connections. Lowercase letters, digits, '-', '_' and '.'. If omitted, one is derived from the object's path of names.",
+      "description": "Unique identifier (UUID) used for references and connections, e.g. the object's Entra object id or Azure resource GUID. If omitted, a deterministic UUIDv5 is derived from the object's path of names.",
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+
+    "endpoint": {
+      "description": "Connection endpoint: the UUID id of any object, or the exact name of an external system (external systems have no id).",
+      "type": "string",
+      "minLength": 1
     },
 
     "named": {
+      "description": "Fields shared by every diagram object that has an id (everything except external systems).",
+      "allOf": [{ "$ref": "#/$defs/base" }],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }
+      }
+    },
+
+    "base": {
       "description": "Fields shared by every diagram object.",
       "type": "object",
       "required": ["name"],
       "properties": {
-        "id": { "$ref": "#/$defs/id" },
         "name": {
           "description": "Display name; the first line of the label.",
           "type": "string",
@@ -99,7 +112,8 @@
     },
 
     "externalSystem": {
-      "allOf": [{ "$ref": "#/$defs/named" }],
+      "description": "A system outside Azure and Entra. Has no id; connections refer to it by its name, which must be unique among external systems.",
+      "allOf": [{ "$ref": "#/$defs/base" }],
       "unevaluatedProperties": false,
       "properties": {
         "kind": {
@@ -173,7 +187,7 @@
     },
 
     "principalRef": {
-      "description": "Either a reference to a principal defined elsewhere in 'entra' (by id), or an inline principal.",
+      "description": "Either a reference to a principal defined elsewhere in 'entra' (by UUID id), or an inline principal.",
       "oneOf": [
         {
           "type": "object",
@@ -287,7 +301,7 @@
       "unevaluatedProperties": false,
       "properties": {
         "image": {
-          "description": "Image reference. If it matches a repository id ('<registry-id>/<repo-id>' style) a dashed 'pulls' connection is drawn.",
+          "description": "Image reference as text, e.g. 'acrcontoso.azurecr.io/chat-api:1.4.2'. Shown in the cell data only; use imageRef to draw the 'pulls' connection.",
           "type": "string"
         },
         "imageRef": {
@@ -398,8 +412,8 @@
           "default": "other"
         },
         "target": {
-          "description": "id of the object the connector talks to (external system, storage account, key vault, ...); drawn as a connection.",
-          "$ref": "#/$defs/id"
+          "description": "What the connector talks to: an object's UUID id or an external system's name; drawn as a connection.",
+          "$ref": "#/$defs/endpoint"
         }
       }
     },
@@ -409,8 +423,8 @@
       "required": ["from", "to"],
       "additionalProperties": false,
       "properties": {
-        "from": { "$ref": "#/$defs/id" },
-        "to": { "$ref": "#/$defs/id" },
+        "from": { "$ref": "#/$defs/endpoint" },
+        "to": { "$ref": "#/$defs/endpoint" },
         "label": { "type": "string" },
         "description": { "type": "string" },
         "style": {

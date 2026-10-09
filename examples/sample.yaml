@@ -7,12 +7,10 @@ diagram:
   direction: horizontal
 
 external:
-  - id: github
-    name: GitHub
+  - name: GitHub
     description: Source control and CI pipelines
     kind: saas
-  - id: customers
-    name: Customers
+  - name: Customers
     description: Public users of the chat app
     kind: user
 
@@ -21,122 +19,122 @@ entra:
   description: contoso.onmicrosoft.com
   domain: contoso.onmicrosoft.com
   servicePrincipals:
-    - id: sp-github-deploy
+    - id: 358716e1-b5e8-513e-bc4e-4f41ff4a0fa7
       name: github-deploy
       description: Federated credential used by GitHub Actions
       kind: application
-    - id: mi-chat-api
+    - id: 0aebb844-c9c5-5b91-8bef-6660dd117246
       name: mi-chat-api
       description: User-assigned identity for the chat API
       kind: managedIdentity
   users:
-    - id: alice
+    - id: 60808e72-fe32-5c81-89a5-3924edd986ba
       name: Alice Smith
       description: Platform lead
       userPrincipalName: alice@contoso.com
-    - id: bob
+    - id: dcb714dd-2e41-5b1f-9187-489c56919d39
       name: Bob Jones
       description: Developer
   groups:
-    - id: grp-platform
+    - id: da234ac0-0964-52f1-9982-b5e0143b70c0
       name: Platform Engineers
       description: Contributor on the prod subscription
       owners:
-        - ref: alice
+        - ref: 60808e72-fe32-5c81-89a5-3924edd986ba
       members:
-        - ref: bob
-        - ref: sp-github-deploy
+        - ref: dcb714dd-2e41-5b1f-9187-489c56919d39
+        - ref: 358716e1-b5e8-513e-bc4e-4f41ff4a0fa7
         - type: user
           name: Carol (contractor)
           description: Guest account
 
 managementGroups:
-  - id: mg-contoso
+  - id: f1ce00c0-d4cc-59d6-b96f-fed6fa042ded
     name: Contoso
     description: Root management group
     subscriptions:
-      - id: sub-prod
+      - id: e62370e3-2a09-55ba-943a-95ad492c1033
         name: Contoso Prod
         description: Production workloads
         resourceGroups:
-          - id: rg-chat
+          - id: bf7ea580-ced5-5af7-8b44-8ffff74a89df
             name: rg-chat-prod
             description: Chat application
             location: eastus2
             keyVaults:
-              - id: kv-chat
+              - id: c93fc6b3-285b-5db9-afd5-fffee0c3ac4c
                 name: kv-chat-prod
                 description: App secrets and API keys
             containerRegistries:
-              - id: acr-contoso
+              - id: def48140-7106-53db-b2a2-6b8d25ff0368
                 name: acrcontoso
                 description: Shared image registry
                 repositories:
-                  - id: repo-chat-api
+                  - id: 2c9e4fdf-24f8-5922-ae9b-a2477638bc43
                     name: chat-api
                     description: Chat API image
                     imageTags: ["1.4.2", latest]
             containerApps:
-              - id: ca-chat-api
+              - id: 4d639f57-d445-506b-9334-ecc85a885e49
                 name: ca-chat-api
                 description: Public chat API
                 ingress: external
-                identity: mi-chat-api
+                identity: 0aebb844-c9c5-5b91-8bef-6660dd117246
                 containers:
-                  - id: ctr-chat-api
+                  - id: b9c33fa0-4850-5b40-953f-787955d1618c
                     name: chat-api
                     description: FastAPI service
-                    imageRef: repo-chat-api
+                    imageRef: 2c9e4fdf-24f8-5922-ae9b-a2477638bc43
             storageAccounts:
-              - id: st-chat
+              - id: 9cd90adf-0363-5007-9e9d-4c7d79936f8d
                 name: stchatprod
                 description: Conversation transcripts and uploads
                 blobContainers:
-                  - id: blob-transcripts
+                  - id: 17602173-d56f-5e52-98b0-c558d4b66e56
                     name: transcripts
                     description: Saved chat transcripts
-                  - id: blob-uploads
+                  - id: 2a973d39-85c5-546b-a0c2-c780f3d0c03c
                     name: uploads
                     description: User-uploaded files
             foundries:
-              - id: aif-chat
+              - id: 03d28565-9ffe-5254-8090-1b22e2fc42c6
                 name: aif-chat-prod
                 description: AI Foundry project for the chat app
                 models:
-                  - id: dep-gpt
+                  - id: 1c2493c3-b22e-5a8a-8c07-7598854a6820
                     name: gpt-chat
                     description: Primary chat model
                     model: gpt-4.1
                     sku: GlobalStandard
                     capacity: 100
                 agents:
-                  - id: agent-support
+                  - id: 5e788329-7afa-59ef-8631-680c64f1cce1
                     name: Support agent
                     description: Answers customer questions
-                    model: dep-gpt
+                    model: 1c2493c3-b22e-5a8a-8c07-7598854a6820
                     connectors:
-                      - id: conn-docs
+                      - id: f515c8b7-1a97-5a89-a154-79f7485db641
                         name: Docs search
                         description: Searches uploaded files
                         kind: fileSearch
-                        target: st-chat
-                      - id: conn-github
+                        target: 9cd90adf-0363-5007-9e9d-4c7d79936f8d
+                      - id: 99855ac3-c17f-5c52-8b36-61a535386952
                         name: GitHub MCP
                         description: Reads issues for known bugs
                         kind: mcp
-                        target: github
+                        target: GitHub
 
 connections:
-  - from: customers
-    to: ca-chat-api
+  - from: Customers
+    to: 4d639f57-d445-506b-9334-ecc85a885e49
     label: HTTPS
-  - from: ca-chat-api
-    to: agent-support
+  - from: 4d639f57-d445-506b-9334-ecc85a885e49
+    to: 5e788329-7afa-59ef-8631-680c64f1cce1
     label: invokes
-  - from: ca-chat-api
-    to: kv-chat
+  - from: 4d639f57-d445-506b-9334-ecc85a885e49
+    to: c93fc6b3-285b-5db9-afd5-fffee0c3ac4c
     label: reads secrets
     style: dashed
-  - from: github
-    to: acr-contoso
+  - from: GitHub
+    to: def48140-7106-53db-b2a2-6b8d25ff0368
     label: pushes images
