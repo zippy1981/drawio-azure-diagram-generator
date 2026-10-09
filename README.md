@@ -73,6 +73,7 @@ Configured in `pyproject.toml`:
   ```sh
   git tag v0.1.0 && git push origin v0.1.0
   ```
+  
 - **PyPI publishing** is off by default. To turn it on, add a
   [trusted publisher](https://docs.pypi.org/trusted-publishers/) on PyPI for this
   repo (workflow `release.yml`, environment `pypi`), create a `pypi` environment in
