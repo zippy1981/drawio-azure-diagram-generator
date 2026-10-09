@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import textwrap
+from typing import TYPE_CHECKING
 
-from .model import Diagram, Node
+if TYPE_CHECKING:
+    from .model import Diagram, Node
 
 ICON = 48  # leaf icon size
 LEAF_W = 120  # leaf slot width; the label wraps to this
@@ -32,7 +34,8 @@ def _lines(text: str, width: float, font_size: int) -> int:
 
 
 def label_height(node: Node, width: float, show_descriptions: bool) -> float:
-    h = _lines(node.name, width, NAME_FONT) * NAME_LINE
+    """Estimate the height of a node's label when wrapped to `width` pixels."""
+    h: float = _lines(node.name, width, NAME_FONT) * NAME_LINE
     if show_descriptions:
         h += _lines(node.description, width, DESC_FONT) * DESC_LINE
     return h
@@ -72,9 +75,9 @@ def _measure(node: Node, diagram: Diagram) -> None:
     node.width = max(content_w + 2 * PAD, MIN_BOX_W, name_w)
 
     header = max(HEADER_ICON + 2 * HEADER_ICON_INSET, 10 + label_height(node, node.width - HEADER_TEXT_LEFT - 8, show))
-    y = header
+    y: float = header
     for row in rows:
-        x = PAD
+        x: float = PAD
         for child in row:
             child.x, child.y = x, y
             x += child.width + GAP
@@ -83,10 +86,12 @@ def _measure(node: Node, diagram: Diagram) -> None:
 
 
 def layout(diagram: Diagram) -> None:
+    """Size every node and position it relative to its parent; sections are placed on the page."""
     for section in diagram.sections:
         _measure(section, diagram)
 
-    x, y = MARGIN, MARGIN + (TITLE_H if diagram.title else 0)
+    x: float = MARGIN
+    y: float = MARGIN + (TITLE_H if diagram.title else 0)
     for section in diagram.sections:
         section.x, section.y = x, y
         if diagram.direction == "vertical":

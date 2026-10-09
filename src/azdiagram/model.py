@@ -1,6 +1,18 @@
+"""Data model shared by the build, layout and draw.io stages."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+YamlObject: TypeAlias = dict[str, Any]
+"""One mapping from the parsed YAML document (already validated against the schema)."""
+
+LineStyle: TypeAlias = Literal["solid", "dashed", "dotted"]
+Direction: TypeAlias = Literal["horizontal", "vertical"]
 
 
 @dataclass
@@ -24,9 +36,11 @@ class Node:
 
     @property
     def is_box(self) -> bool:
+        """Whether the node renders as a box (it has children) rather than a bare icon."""
         return bool(self.children)
 
-    def walk(self):
+    def walk(self) -> Iterator[Node]:
+        """Yield this node and all of its descendants, depth first."""
         yield self
         for child in self.children:
             yield from child.walk()
@@ -34,23 +48,27 @@ class Node:
 
 @dataclass
 class Edge:
+    """An arrow between two nodes, referenced by their cell ids."""
+
     id: str
     source: str
     target: str
     label: str = ""
     description: str = ""
-    line: str = "solid"  # solid | dashed | dotted
+    line: LineStyle = "solid"
     bidirectional: bool = False
     implicit: bool = False  # derived from identity/imageRef/model/target rather than `connections`
 
 
 @dataclass
 class Diagram:
+    """Everything needed to lay out and write one draw.io page."""
+
     id: str
     title: str
     page_name: str
     show_descriptions: bool
-    direction: str
+    direction: Direction
     max_row_width: int
     sections: list[Node]
     edges: list[Edge]

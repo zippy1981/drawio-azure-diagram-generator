@@ -5,71 +5,93 @@ from __future__ import annotations
 import re
 import uuid
 from functools import partial
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from .icons import icon_for, normalize_icon
-from .model import Diagram, Edge, Node
+from .model import Diagram, Direction, Edge, Node, YamlObject
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "https://github.com/zippy1981/drawio-azure-diagram-generator")
 UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
-COMMON_FIELDS = {"id", "name", "description", "icon", "style", "tags"}
+COMMON_FIELDS = frozenset({"id", "name", "description", "icon", "style", "tags"})
 
-# kind -> [(yaml key, child kind, synthetic grouping kind, grouping label)]
-CHILDREN = {
+
+class ChildSpec(NamedTuple):
+    """A YAML list of child objects, optionally wrapped in a synthetic grouping box."""
+
+    key: str
+    child_kind: str
+    group_kind: str | None = None
+    group_label: str = ""
+
+
+class ReferenceSpec(NamedTuple):
+    """A field holding a reference that is drawn as an edge."""
+
+    field: str
+    target_kinds: frozenset[str] | None  # None: any endpoint, including external system names
+    label: str
+
+
+CHILDREN: dict[str, list[ChildSpec]] = {
     "entra_tenant": [
-        ("servicePrincipals", "service_principal", None, None),
-        ("users", "user", None, None),
-        ("groups", "group", None, None),
+        ChildSpec("servicePrincipals", "service_principal"),
+        ChildSpec("users", "user"),
+        ChildSpec("groups", "group"),
     ],
     "group": [
-        ("owners", "principal", "owners", "Owners"),
-        ("members", "principal", "members", "Members"),
+        ChildSpec("owners", "principal", "owners", "Owners"),
+        ChildSpec("members", "principal", "members", "Members"),
     ],
     "management_group": [
-        ("managementGroups", "management_group", None, None),
-        ("subscriptions", "subscription", None, None),
+        ChildSpec("managementGroups", "management_group"),
+        ChildSpec("subscriptions", "subscription"),
     ],
-    "subscription": [("resourceGroups", "resource_group", None, None)],
+    "subscription": [ChildSpec("resourceGroups", "resource_group")],
     "resource_group": [
-        ("keyVaults", "key_vault", None, None),
-        ("containerRegistries", "container_registry", None, None),
-        ("containerApps", "container_app", None, None),
-        ("storageAccounts", "storage_account", None, None),
-        ("foundries", "foundry", None, None),
+        ChildSpec("keyVaults", "key_vault"),
+        ChildSpec("containerRegistries", "container_registry"),
+        ChildSpec("containerApps", "container_app"),
+        ChildSpec("storageAccounts", "storage_account"),
+        ChildSpec("foundries", "foundry"),
     ],
-    "container_app": [("containers", "container", None, None)],
-    "container_registry": [("repositories", "repository", None, None)],
-    "storage_account": [("blobContainers", "blob_container", "blob_containers", "Blob containers")],
+    "container_app": [ChildSpec("containers", "container")],
+    "container_registry": [ChildSpec("repositories", "repository")],
+    "storage_account": [ChildSpec("blobContainers", "blob_container", "blob_containers", "Blob containers")],
     "foundry": [
-        ("models", "model_deployment", "models", "Models"),
-        ("agents", "agent", "agents", "Agents"),
+        ChildSpec("models", "model_deployment", "models", "Models"),
+        ChildSpec("agents", "agent", "agents", "Agents"),
     ],
-    "agent": [("connectors", "connector", "connectors", "Connectors")],
+    "agent": [ChildSpec("connectors", "connector", "connectors", "Connectors")],
 }
 
-# kind -> [(field, allowed target kinds or None for any endpoint, edge label)]
-REFERENCES = {
-    "container_app": [("identity", {"service_principal"}, "runs as")],
-    "container": [("imageRef", {"repository"}, "pulls")],
-    "agent": [("model", {"model_deployment"}, "uses")],
-    "connector": [("target", None, "connects to")],
+REFERENCES: dict[str, list[ReferenceSpec]] = {
+    "container_app": [ReferenceSpec("identity", frozenset({"service_principal"}), "runs as")],
+    "container": [ReferenceSpec("imageRef", frozenset({"repository"}), "pulls")],
+    "agent": [ReferenceSpec("model", frozenset({"model_deployment"}), "uses")],
+    "connector": [ReferenceSpec("target", None, "connects to")],
 }
 
 # kinds whose `kind` field picks an icon variant, with its default
-VARIANT_DEFAULTS = {"external": "system", "service_principal": "application"}
+VARIANT_DEFAULTS: dict[str, str] = {"external": "system", "service_principal": "application"}
 
-PRINCIPAL_KINDS = {"user": "user", "group": "group", "servicePrincipal": "service_principal"}
+PRINCIPAL_KINDS: dict[str, str] = {"user": "user", "group": "group", "servicePrincipal": "service_principal"}
+PRINCIPAL_NODE_KINDS = frozenset(PRINCIPAL_KINDS.values())
 
 
 class DiagramError(Exception):
-    pass
+    """The document is schema-valid but inconsistent: duplicate ids, unresolved or mistyped references."""
 
 
 def derive_id(*parts: str) -> str:
+    """Return a deterministic UUIDv5 for a path of names."""
     return str(uuid.uuid5(NAMESPACE, "/".join(parts)))
 
 
-def _scalar(value) -> str:
+def _scalar(value: object) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, list):
@@ -83,7 +105,7 @@ class _Builder:
         self.where: dict[str, str] = {}  # every cell id -> YAML location, for duplicate detection
         self.externals: dict[str, Node] = {}
         self.edges: list[Edge] = []
-        self.deferred: list = []  # reference resolution, run once every node exists
+        self.deferred: list[Callable[[], None]] = []  # reference resolution, run once every node exists
 
     def _claim(self, node_id: str, loc: str) -> None:
         if node_id in self.where:
@@ -96,11 +118,11 @@ class _Builder:
         self._claim(node_id, loc)
         return Node(kind=kind, id=node_id, name=name, icon=icon_for(kind))
 
-    def obj(self, kind: str, obj: dict, loc: str, path: list[str]) -> Node:
+    def obj(self, kind: str, obj: YamlObject, loc: str, path: list[str]) -> Node:
         spec = CHILDREN.get(kind, [])
-        child_keys = {key for key, *_ in spec}
-        path = path + [obj["name"]]
-        node_id = (obj.get("id") or derive_id(*path)).lower()
+        child_keys = {s.key for s in spec}
+        path = [*path, obj["name"]]
+        node_id = str(obj.get("id") or derive_id(*path)).lower()
         self._claim(node_id, loc)
 
         variant = obj.get("kind", VARIANT_DEFAULTS[kind]) if kind in VARIANT_DEFAULTS else None
@@ -119,45 +141,50 @@ class _Builder:
         )
         self.nodes[node_id] = node
 
-        for key, child_kind, group_kind, group_label in spec:
-            items = obj.get(key) or []
+        for child in spec:
+            items: list[YamlObject] = obj.get(child.key) or []
             if not items:
                 continue
             parent = node
-            if group_kind:
-                parent = self.synthetic(group_kind, group_label, derive_id(node_id, key), f"{loc}.{key}")
+            if child.group_kind:
+                parent = self.synthetic(
+                    child.group_kind, child.group_label, derive_id(node_id, child.key), f"{loc}.{child.key}"
+                )
                 node.children.append(parent)
             for i, item in enumerate(items):
-                item_loc = f"{loc}.{key}[{i}]"
-                if child_kind == "principal":
-                    parent.children.append(self.principal(item, item_loc, path + [key], parent, i))
+                item_loc = f"{loc}.{child.key}[{i}]"
+                if child.child_kind == "principal":
+                    parent.children.append(self.principal(item, item_loc, [*path, child.key], parent, i))
                 else:
-                    parent.children.append(self.obj(child_kind, item, item_loc, path))
+                    parent.children.append(self.obj(child.child_kind, item, item_loc, path))
 
-        for field, kinds, label in REFERENCES.get(kind, []):
-            if field in obj:
-                self.deferred.append(partial(self.reference_edge, node, obj[field], kinds, label, f"{loc}.{field}"))
+        for ref in REFERENCES.get(kind, []):
+            if ref.field in obj:
+                ref_loc = f"{loc}.{ref.field}"
+                self.deferred.append(
+                    partial(self.reference_edge, node, obj[ref.field], ref.target_kinds, ref.label, ref_loc)
+                )
         return node
 
-    def principal(self, item: dict, loc: str, path: list[str], box: Node, index: int) -> Node:
+    def principal(self, item: YamlObject, loc: str, path: list[str], box: Node, index: int) -> Node:
         if "ref" not in item:
             return self.obj(PRINCIPAL_KINDS[item["type"]], item, loc, path)
         # A copy of a principal defined elsewhere; filled in once everything is built.
-        ref = item["ref"].lower()
+        ref = str(item["ref"]).lower()
         copy = Node(kind="", id=derive_id(box.id, "ref", ref, str(index)), name="")
         self._claim(copy.id, loc)
         self.deferred.append(partial(self.fill_ref, copy, item, loc))
         return copy
 
-    def fill_ref(self, copy: Node, item: dict, loc: str) -> None:
-        target = self.lookup(item["ref"], {"user", "group", "service_principal"}, f"{loc}.ref")
+    def fill_ref(self, copy: Node, item: YamlObject, loc: str) -> None:
+        target = self.lookup(item["ref"], PRINCIPAL_NODE_KINDS, f"{loc}.ref")
         copy.kind = target.kind
         copy.name = target.name
         copy.description = item.get("description", target.description)
         copy.icon = target.icon
         copy.props = {"ref": target.id}
 
-    def lookup(self, ref: str, kinds: set[str] | None, loc: str) -> Node:
+    def lookup(self, ref: str, kinds: frozenset[str] | None, loc: str) -> Node:
         node = self.nodes.get(ref.lower())
         if node is None:
             raise DiagramError(f"{loc}: unknown id {ref}")
@@ -172,7 +199,7 @@ class _Builder:
             return self.externals[value].id
         raise DiagramError(f"{loc}: {value!r} is neither a UUID nor the name of an external system")
 
-    def reference_edge(self, node: Node, ref: str, kinds, label: str, loc: str) -> None:
+    def reference_edge(self, node: Node, ref: str, kinds: frozenset[str] | None, label: str, loc: str) -> None:
         target = self.endpoint(ref, loc) if kinds is None else self.lookup(ref, kinds, loc).id
         self.edges.append(
             Edge(
@@ -187,17 +214,17 @@ class _Builder:
 
 
 def build(
-    doc: dict,
+    doc: dict[str, Any],
     *,
     show_descriptions: bool | None = None,
-    direction: str | None = None,
+    direction: Direction | None = None,
     max_row_width: int | None = None,
 ) -> Diagram:
     """Build the Node tree. Keyword arguments override the document's `diagram` settings."""
     b = _Builder()
     sections: list[Node] = []
 
-    externals = doc.get("external") or []
+    externals: list[YamlObject] = doc.get("external") or []
     if externals:
         section = b.synthetic("external_section", "External", derive_id("section", "external"), "external")
         for i, ext in enumerate(externals):
@@ -233,7 +260,7 @@ def build(
             )
         )
 
-    settings = doc.get("diagram") or {}
+    settings: YamlObject = doc.get("diagram") or {}
     return Diagram(
         id=derive_id("diagram"),
         title=settings.get("title", ""),

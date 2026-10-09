@@ -9,10 +9,11 @@ from pathlib import Path
 from .build import DiagramError, build
 from .drawio import to_drawio
 from .layout import layout
-from .loader import ValidationFailed, load
+from .loader import SchemaValidationError, load
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the command line interface and return the process exit code."""
     parser = argparse.ArgumentParser(prog="azdiagram", description=__doc__)
     parser.add_argument("input", type=Path, help="YAML file describing the infrastructure")
     parser.add_argument("-o", "--output", type=Path, help="output .drawio file (default: INPUT with .drawio suffix)")
@@ -28,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
             show_descriptions=False if args.no_descriptions else None,
             direction=args.direction,
         )
-    except ValidationFailed as e:
+    except SchemaValidationError as e:
         for err in e.errors:
             print(f"{args.input}: {err}", file=sys.stderr)
         return 1
