@@ -64,6 +64,10 @@ m365:
       name: Exchange Online
       description: support@contoso.com mailbox
       kind: exchange
+    - id: 58b1554e-f8f6-4685-8761-d07462b17655
+      name: Outlook
+      description: Support team shared inbox
+      kind: outlook
     - id: f752955b-80e6-4bd2-a2ab-01f14555a996
       name: SharePoint
       description: Product docs site
@@ -157,6 +161,21 @@ managementGroups:
                         description: Emails follow-ups to customers
                         kind: openapi
                         target: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+                  - id: 942759ad-3694-493b-8afd-9369ae2a7d5c
+                    name: Triage agent
+                    description: Sorts incoming support mail
+                    model: 1c2493c3-b22e-5a8a-8c07-7598854a6820
+                    connectors:
+                      - id: 6f7c48cd-a02c-499f-92f7-7a8e1a91ad70
+                        name: Customer lookup
+                        description: Finds the sender's account
+                        kind: mcp
+                        target: be853dd0-6245-4912-9615-b876925cd838
+                      - id: 8858ae78-303c-4b09-8d92-0219939d265b
+                        name: Inbox
+                        description: Reads and labels support mail
+                        kind: mcp
+                        target: 58b1554e-f8f6-4685-8761-d07462b17655
             postgresServers:
               - id: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
                 name: psql-chat-prod
@@ -207,3 +226,7 @@ connections:
   - from: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
     to: 5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1
     label: sends mail
+  - from: 58b1554e-f8f6-4685-8761-d07462b17655
+    to: 942759ad-3694-493b-8afd-9369ae2a7d5c
+    label: new mail
+    style: dashed

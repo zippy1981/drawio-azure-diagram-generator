@@ -173,9 +173,25 @@ def test_schema_rejects_unknown_postgres_kind(doc):
 
 def test_m365_apps_pick_icons(doc):
     nodes = {n.name: n for n in _nodes(build(doc)).values()}
-    assert [c.name for c in nodes["Contoso Microsoft 365"].children] == ["Exchange Online", "SharePoint", "Teams", "Excel"]
+    assert [c.name for c in nodes["Contoso Microsoft 365"].children] == [
+        "Exchange Online",
+        "Outlook",
+        "SharePoint",
+        "Teams",
+        "Excel",
+    ]
     assert nodes["Teams"].icon.endswith("/teams_48x1.svg")
     assert nodes["Exchange Online"].icon.endswith("/outlook_48x1.svg")
     doc["m365"]["apps"][0]["kind"] = "other"
     nodes = {n.name: n for n in _nodes(build(doc)).values()}
     assert nodes["Exchange Online"].icon.endswith("/office_48x1.svg")
+
+
+def test_agent_connects_to_m365_app_and_postgres(doc):
+    diagram = build(doc)
+    nodes = {n.name: n for n in _nodes(diagram).values()}
+    edges = {(e.source, e.target, e.label) for e in diagram.edges}
+    outlook, agent, db = nodes["Outlook"], nodes["Triage agent"], nodes["chat"]
+    assert (nodes["Inbox"].id, outlook.id, "connects to") in edges
+    assert (nodes["Customer lookup"].id, db.id, "connects to") in edges
+    assert (outlook.id, agent.id, "new mail") in edges
