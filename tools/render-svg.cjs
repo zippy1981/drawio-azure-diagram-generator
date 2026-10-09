@@ -4,8 +4,9 @@
 //   node tools/render-svg.cjs examples/sample.drawio examples/sample.svg
 //
 // draw.io's viewer script and the icons the diagram references are fetched from the
-// jgraph/drawio GitHub repo (pinned tag) and cached in .cache/drawio/. Icons are inlined
-// into the SVG as data URIs so the file is self-contained.
+// jgraph/drawio GitHub repo (pinned tag) and cached in .cache/drawio/. Icons referenced by
+// https URL (the Microsoft 365 ones) are fetched and cached in .cache/remote/. Icons are
+// inlined into the SVG as data URIs so the file is self-contained.
 // Requires the `playwright` npm package and a Chromium it can launch.
 
 const fs = require("fs");
@@ -23,6 +24,21 @@ async function cached(relPath) {
   if (!fs.existsSync(file)) {
     const res = await fetch(RAW + relPath);
     if (!res.ok) throw new Error(`${res.status} fetching ${RAW + relPath}`);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+  }
+  return fs.readFileSync(file);
+}
+
+const REMOTE_CACHE = path.resolve(__dirname, "..", ".cache", "remote");
+
+async function cachedUrl(url) {
+  const u = new URL(url);
+  const file = path.join(REMOTE_CACHE, u.host, decodeURIComponent(u.pathname));
+  if (u.protocol !== "https:" || !file.startsWith(REMOTE_CACHE + path.sep)) throw new Error(`bad url ${url}`);
+  if (!fs.existsSync(file)) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`${res.status} fetching ${url}`);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
   }
@@ -76,12 +92,15 @@ async function main() {
       return mxUtils.getXml(root);
     }, xml);
 
-    // Inline every image the renderer referenced by draw.io-relative path.
-    const hrefs = new Set([...svg.matchAll(/(?:xlink:)?href="((?:http:\/\/drawio\.local\/)?img\/[^"]+)"/g)].map((m) => m[1]));
+    // Inline every image the renderer referenced, by draw.io-relative path or https URL.
+    const hrefs = new Set(
+      [...svg.matchAll(/(?:xlink:)?href="((?:http:\/\/drawio\.local\/)?img\/[^"]+|https:\/\/[^"]+\.(?:svg|png))"/g)].map((m) => m[1]),
+    );
     let out = svg;
     for (const href of hrefs) {
-      const rel = href.replace(ORIGIN, "");
-      const data = (await cached(rel)).toString("base64");
+      const remote = href.startsWith("https://");
+      const rel = remote ? new URL(href).pathname : href.replace(ORIGIN, "");
+      const data = (await (remote ? cachedUrl(href) : cached(rel))).toString("base64");
       const uri = `data:${MIME[path.extname(rel)] || "application/octet-stream"};base64,${data}`;
       out = out.split(`"${href}"`).join(`"${uri}"`);
     }

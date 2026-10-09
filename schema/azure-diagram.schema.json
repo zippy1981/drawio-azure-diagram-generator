@@ -18,6 +18,8 @@
       "items": { "$ref": "#/$defs/externalSystem" }
     },
     "entra": { "$ref": "#/$defs/entraTenant" },
+    "graph": { "$ref": "#/$defs/graph" },
+    "m365": { "$ref": "#/$defs/m365" },
     "managementGroups": {
       "description": "Optional management group hierarchy. Subscriptions may live here or at the top level, not both.",
       "type": "array",
@@ -147,6 +149,49 @@
       }
     },
 
+    "graph": {
+      "description": "Microsoft Graph, the API in front of Entra ID and Microsoft 365. Connect apps and agents to it by its id.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "permissions": {
+          "description": "Graph permissions in use, e.g. ['Mail.Read (application)', 'Sites.Selected']. Shown in the cell data.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "m365": {
+      "description": "The Microsoft 365 tenant and the apps in use.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "domain": { "type": "string" },
+        "apps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/m365App" }
+        }
+      }
+    },
+
+    "m365App": {
+      "description": "A Microsoft 365 app or workload.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Picks the default icon. Exchange Online uses the Outlook icon; use 'other' with 'icon' for anything not listed.",
+          "enum": [
+            "exchange", "sharePoint", "oneDrive", "teams", "outlook", "word", "excel", "powerPoint", "oneNote",
+            "forms", "loop", "copilot", "stream", "toDo", "project", "visio", "sway", "other"
+          ],
+          "default": "other"
+        },
+        "url": { "type": "string" }
+      }
+    },
+
     "servicePrincipal": {
       "allOf": [{ "$ref": "#/$defs/named" }],
       "unevaluatedProperties": false,
@@ -264,6 +309,18 @@
         "foundries": {
           "type": "array",
           "items": { "$ref": "#/$defs/foundry" }
+        },
+        "bingResources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bingResource" }
+        },
+        "postgresServers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/postgresServer" }
+        },
+        "virtualNetworks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/virtualNetwork" }
         }
       }
     },
@@ -375,7 +432,8 @@
     },
 
     "modelDeployment": {
-      "allOf": [{ "$ref": "#/$defs/named" }],
+      "description": "A model deployment. Has no id; agents refer to it by its name, which must be unique within the foundry.",
+      "allOf": [{ "$ref": "#/$defs/base" }],
       "unevaluatedProperties": false,
       "properties": {
         "model": { "description": "Base model name, e.g. 'gpt-4.1'.", "type": "string" },
@@ -390,8 +448,9 @@
       "unevaluatedProperties": false,
       "properties": {
         "model": {
-          "description": "id of the modelDeployment the agent uses; drawn as a dashed connection.",
-          "$ref": "#/$defs/id"
+          "description": "Name of the model deployment (in the same foundry) the agent uses; drawn as a dashed connection.",
+          "type": "string",
+          "minLength": 1
         },
         "instructions": { "type": "string" },
         "connectors": {
@@ -408,14 +467,100 @@
       "properties": {
         "kind": {
           "description": "Tool / connector type.",
-          "enum": ["mcp", "openapi", "azureAISearch", "bingGrounding", "fileSearch", "codeInterpreter", "azureFunction", "other"],
+          "enum": ["mcp", "openapi", "azureAISearch", "bingGrounding", "bingCustomSearch", "fileSearch", "codeInterpreter", "azureFunction", "other"],
           "default": "other"
         },
         "target": {
-          "description": "What the connector talks to: an object's UUID id or an external system's name; drawn as a connection.",
+          "description": "What the connector talks to: any object's UUID id (an Azure resource, Microsoft Graph, a Microsoft 365 app, ...) or an external system's name; drawn as a connection.",
           "$ref": "#/$defs/endpoint"
         }
       }
+    },
+
+    "bingResource": {
+      "description": "A Grounding with Bing resource (Microsoft.Bing/accounts). These are global resources: they live in a resource group but have no region.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "search = Grounding with Bing Search; customSearch = Grounding with Bing Custom Search.",
+          "enum": ["search", "customSearch"],
+          "default": "search"
+        },
+        "sku": { "description": "e.g. 'G1'.", "type": "string" },
+        "configurations": {
+          "description": "Custom search configurations (customSearch only).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/bingConfiguration" }
+        }
+      },
+      "if": { "required": ["kind"], "properties": { "kind": { "const": "customSearch" } } },
+      "else": { "not": { "required": ["configurations"] } }
+    },
+
+    "bingConfiguration": {
+      "description": "A Bing Custom Search configuration: the set of sites it searches.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "sites": {
+          "description": "Domains or URL prefixes to search, e.g. ['learn.microsoft.com', 'contoso.com/docs'].",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "virtualNetwork": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "addressSpace": {
+          "description": "Address prefixes, e.g. ['10.0.0.0/16'].",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subnets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/subnet" }
+        }
+      }
+    },
+
+    "subnet": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "addressPrefix": { "description": "e.g. '10.0.1.0/24'.", "type": "string" },
+        "delegation": {
+          "description": "Service the subnet is delegated to, e.g. 'Microsoft.App/environments'.",
+          "type": "string"
+        }
+      }
+    },
+
+    "postgresServer": {
+      "description": "A PostgreSQL server or cluster.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "flexibleServer = Azure Database for PostgreSQL; cosmosDb = Azure Cosmos DB for PostgreSQL; horizonDb = Azure HorizonDB; singleServer = Azure Database for PostgreSQL - Single Server (legacy).",
+          "enum": ["flexibleServer", "cosmosDb", "horizonDb", "singleServer"],
+          "default": "flexibleServer"
+        },
+        "version": { "description": "PostgreSQL major version, e.g. '17'.", "type": "string" },
+        "sku": { "description": "Compute tier and size, e.g. 'GP_Standard_D4ds_v5'.", "type": "string" },
+        "databases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/postgresDatabase" }
+        }
+      }
+    },
+
+    "postgresDatabase": {
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false
     },
 
     "connection": {

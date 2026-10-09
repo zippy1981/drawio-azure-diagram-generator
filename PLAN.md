@@ -27,6 +27,9 @@ azdiagram examples/sample.yaml -o sample.drawio
 │   └── Group                      box   – entra.groups[]
 │       ├── Owners                 box   – owners[]  (ref or inline principal)
 │       └── Members                box   – members[] (ref or inline principal)
+├── Microsoft Graph                icon  – graph
+├── Microsoft 365                  box   – m365
+│   └── App                        icon  – m365.apps[] (kind picks the app)
 ├── Management group (opt.)        box   – managementGroups[] (nestable)
 └── Subscription                   box   – subscriptions[] (top level or under an MG)
         └── Resource group         box   – resourceGroups[]
@@ -38,27 +41,33 @@ azdiagram examples/sample.yaml -o sample.drawio
             ├── Storage account    box   – storageAccounts[]
             │   └── Blob containers box  – (synthetic grouping)
             │       └── Container  icon  – blobContainers[]
-            └── AI Foundry         box   – foundries[]
-                ├── Models         box   – (synthetic grouping)
-                │   └── Deployment icon  – models[]
-                └── Agents         box   – (synthetic grouping)
-                    └── Agent      box   – agents[]
-                        └── Connectors box – (synthetic grouping)
-                            └── Connector icon – connectors[]
+            ├── AI Foundry         box   – foundries[]
+            │   ├── Models         box   – (synthetic grouping)
+            │   │   └── Deployment icon  – models[]
+            │   └── Agents         box   – (synthetic grouping)
+            │       └── Agent      box   – agents[]
+            │           └── Connectors box – (synthetic grouping)
+            │               └── Connector icon – connectors[]
+            ├── Bing resource      icon  – bingResources[] (global; kind: search | customSearch)
+            │   └── Configuration  icon  – configurations[] (customSearch only)
+            ├── PostgreSQL server  icon  – postgresServers[] (kind picks the service)
+            │   └── Database       icon  – databases[]
+            └── Virtual network    box   – virtualNetworks[]
+                └── Subnet         icon  – subnets[]
 ```
 
 "box"/"icon" above is the usual outcome; the real rule is dynamic (see 3.2).
 
 ### Common fields (every object)
 
-| field         | required | purpose                                                                                            |
-|---------------|----------|----------------------------------------------------------------------------------------------------|
-| `name`        | yes      | first line of the label                                                                            |
-| `description` | no       | second line of the label + tooltip                                                                 |
-| `id`          | no       | UUID; target for `ref`, `connections`, `identity`, `target`, ... (not allowed on external systems) |
-| `icon`        | no       | override the default icon                                                                          |
-| `style`       | no       | raw draw.io style appended to the generated one                                                    |
-| `tags`        | no       | key/value metadata stored as custom cell properties                                                |
+| field         | required | purpose                                                                                                                 |
+|---------------|----------|-------------------------------------------------------------------------------------------------------------------------|
+| `name`        | yes      | first line of the label                                                                                                 |
+| `description` | no       | second line of the label + tooltip                                                                                      |
+| `id`          | no       | UUID; target for `ref`, `connections`, `identity`, `target`, ... (not allowed on external systems or model deployments) |
+| `icon`        | no       | override the default icon                                                                                               |
+| `style`       | no       | raw draw.io style appended to the generated one                                                                         |
+| `tags`        | no       | key/value metadata stored as custom cell properties                                                                     |
 
 All ids are UUIDs (e.g. the Entra object id or Azure resource GUID). Ids that
 are omitted are derived as a UUIDv5 of the object's name path
@@ -74,8 +83,13 @@ external names must be unique. Internally they still get a UUIDv5 of
 - `connections[]` – generic `from`/`to` by UUID (or external name), with `label`, `style`, `bidirectional`.
 - `containerApp.identity` → service principal (dashed, "runs as").
 - `container.imageRef` → repository (dashed, "pulls").
-- `agent.model` → model deployment (dashed, "uses").
-- `connector.target` → any object (dashed, "connects to").
+- `agent.model` → model deployment **by name**, within the agent's own foundry
+  (dashed, "uses"). Model deployments have no `id` (see
+  [ADR 0013](docs/adr/0013-model-deployments-referenced-by-name.md)), so
+  deployment names must be unique within a foundry.
+- `connector.target` → any object with an id (Azure resources, Microsoft Graph,
+  Microsoft 365 apps, Bing configurations, ...) or an external system by name
+  (dashed, "connects to").
 - `group.owners/members[].ref` → render a copy of the referenced principal's icon
   inside the Owners/Members box (no arrow, to keep the Entra box readable).
 
@@ -115,16 +129,19 @@ No draw.io install needed at runtime.
 3. Semantic checks the schema can't express (done while building, in `build.py`):
    - ids are unique across the whole document (explicit + derived), and
      external system names are unique;
-   - every `ref`, `identity`, `imageRef`, `model` resolves to a UUID id;
+   - every `ref`, `identity`, `imageRef` resolves to a UUID id, and every
+     agent `model` to a model deployment of that name in the same foundry;
      every `from`, `to`, `target` resolves to a UUID id or, failing that, an
      external system name; `identity` must point at a service principal, `imageRef` at a
-     repository, `model` at a model deployment;
+     repository;
+   - model deployment names are unique within their foundry;
    - `ref` inside owners/members points at a user, group or service principal.
 
 ### 3.2 Build the node tree (`build.py`)
 
 Turn the dict into a uniform `Node` tree. Top-level sections, in order:
-**External** (a box holding the external systems), the **Entra tenant**, each
+**External** (a box holding the external systems), the **Entra tenant**,
+**Microsoft Graph**, **Microsoft 365**, each
 top-level **management group**, then each top-level **subscription**. Empty
 sections are dropped.
 
@@ -172,6 +189,32 @@ needs no embedded images. Every path below was checked to exist in the
 | Agents (group) / Agent     | `ai_machine_learning/Bot_Services.svg`        |
 | Connectors (group)         | `networking/Connections.svg`                  |
 | Connector                  | `integration/Logic_Apps_Custom_Connector.svg` |
+| Microsoft Graph            | `web/API_Center.svg`                          |
+| Virtual network            | `networking/Virtual_Networks.svg`             |
+| Bing Search (grounding)    | `general/Search.svg`                          |
+| Bing Custom Search         | `general/Search_Grid.svg`                     |
+| Bing custom configuration  | `general/Globe.svg`                           |
+| Subnet                     | `networking/Subnet.svg`                       |
+
+PostgreSQL servers pick their icon by `kind`:
+
+| `kind`           | service                                                | icon                                                                                    |
+|------------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------|
+| `flexibleServer` | Azure Database for PostgreSQL (default)                | `databases/Azure_Database_PostgreSQL_Server.svg`                                        |
+| `cosmosDb`       | Azure Cosmos DB for PostgreSQL                         | `databases/Azure_Database_PostgreSQL_Server_Group.svg`                                  |
+| `horizonDb`      | Azure HorizonDB (no icon of its own yet)               | `databases/Azure_Database_PostgreSQL_Server.svg`                                        |
+| `singleServer`   | Azure Database for PostgreSQL - Single Server (legacy) | `img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg` (older set, so it stands out) |
+
+Their databases use `databases/Managed_Database.svg`.
+
+draw.io has no current Microsoft 365 icons, so the Microsoft 365 box and its
+apps use Microsoft's Fluent product icons by URL
+(`https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/<app>_48x1.svg`,
+see [ADR 0012](docs/adr/0012-microsoft-365-icons-from-microsoft-cdn.md)). The
+box uses `m365`, each app its own icon (`kind: teams` → `teams`), `kind: other`
+uses `office`, and `kind: exchange` uses `outlook` because the CDN has no
+Exchange icon. There is no Planner icon either, so Planner is `kind: other`
+with an `icon:` override.
 
 A per-object `icon:` overrides the table.
 
@@ -230,7 +273,7 @@ Each node becomes an `<object>` (a.k.a. UserObject) so `description` and
   bidirectional), `parent="1"` so they can cross box boundaries.
 
 Box colours by tier so nesting is readable (light fills, darker stroke):
-External grey, Entra purple, Management group/Subscription yellow (MG
+External grey, Entra purple, Microsoft 365 orange, Management group/Subscription yellow (MG
 dashed), Resource group blue, resources white, synthetic groupings dashed
 with no fill.
 
@@ -278,7 +321,8 @@ All in `tests/test_azdiagram.py`:
   boxes, so in busy diagrams they cross labels. ELK (via elkjs) is the likely
   fix; in the meantime draw.io's Arrange → Layout helps.
 
-- More resource types (VNets/subnets, App Service, Cosmos DB, SQL) – each is a
+- Placing resources inside subnets (VNet integration, private endpoints).
+- More resource types (App Service, Cosmos DB NoSQL, SQL) – each is a
   schema `$def`, a list on `resourceGroup`, and an icon row.
 - Importing from Azure (`az graph query`) or Bicep/Terraform state to produce
   the YAML.

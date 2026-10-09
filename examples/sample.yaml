@@ -48,6 +48,39 @@ entra:
           name: Carol (contractor)
           description: Guest account
 
+graph:
+  id: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+  name: Microsoft Graph
+  description: Mail and calendar for the support agent
+  permissions: [Mail.Send (application), Calendars.Read (application)]
+
+m365:
+  id: 8929aa11-3287-4f1e-8a55-c3185af8f7aa
+  name: Contoso Microsoft 365
+  description: contoso.com
+  domain: contoso.com
+  apps:
+    - id: 5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1
+      name: Exchange Online
+      description: support@contoso.com mailbox
+      kind: exchange
+    - id: 58b1554e-f8f6-4685-8761-d07462b17655
+      name: Outlook
+      description: Support team shared inbox
+      kind: outlook
+    - id: f752955b-80e6-4bd2-a2ab-01f14555a996
+      name: SharePoint
+      description: Product docs site
+      kind: sharePoint
+    - id: 99e50769-7d41-4e05-8f0d-0d386ca19b25
+      name: Teams
+      description: Escalations channel
+      kind: teams
+    - id: 304cc23d-e2da-42d6-b189-7750ec560a27
+      name: Excel
+      description: Weekly support report
+      kind: excel
+
 managementGroups:
   - id: f1ce00c0-d4cc-59d6-b96f-fed6fa042ded
     name: Contoso
@@ -61,6 +94,21 @@ managementGroups:
             name: rg-chat-prod
             description: Chat application
             location: eastus2
+            virtualNetworks:
+              - id: 115b58ca-e366-445a-8360-955ac3818aa3
+                name: vnet-chat-prod
+                description: Private network for the chat app
+                addressSpace: [10.10.0.0/16]
+                subnets:
+                  - id: ec4d8009-63b8-410d-8c11-5b7d69ffaa76
+                    name: snet-apps
+                    description: Container Apps environment
+                    addressPrefix: 10.10.0.0/23
+                    delegation: Microsoft.App/environments
+                  - id: c02e1f30-c139-4aad-994f-ceaa3cb50e3e
+                    name: snet-data
+                    description: Private endpoints and Postgres
+                    addressPrefix: 10.10.2.0/24
             keyVaults:
               - id: c93fc6b3-285b-5db9-afd5-fffee0c3ac4c
                 name: kv-chat-prod
@@ -101,8 +149,7 @@ managementGroups:
                 name: aif-chat-prod
                 description: AI Foundry project for the chat app
                 models:
-                  - id: 1c2493c3-b22e-5a8a-8c07-7598854a6820
-                    name: gpt-chat
+                  - name: gpt-chat
                     description: Primary chat model
                     model: gpt-4.1
                     sku: GlobalStandard
@@ -111,7 +158,7 @@ managementGroups:
                   - id: 5e788329-7afa-59ef-8631-680c64f1cce1
                     name: Support agent
                     description: Answers customer questions
-                    model: 1c2493c3-b22e-5a8a-8c07-7598854a6820
+                    model: gpt-chat
                     connectors:
                       - id: f515c8b7-1a97-5a89-a154-79f7485db641
                         name: Docs search
@@ -123,6 +170,80 @@ managementGroups:
                         description: Reads issues for known bugs
                         kind: mcp
                         target: GitHub
+                      - id: 553e0e3d-dc48-4116-9fff-202951af7717
+                        name: Graph mail
+                        description: Emails follow-ups to customers
+                        kind: openapi
+                        target: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+                      - id: 6815184a-a424-488a-8c66-414ad9aeaf7f
+                        name: Web search
+                        description: Looks up public answers
+                        kind: bingGrounding
+                        target: eee8fa51-42fa-4d92-aacf-666121206087
+                  - id: 942759ad-3694-493b-8afd-9369ae2a7d5c
+                    name: Triage agent
+                    description: Sorts incoming support mail
+                    model: gpt-chat
+                    connectors:
+                      - id: 6f7c48cd-a02c-499f-92f7-7a8e1a91ad70
+                        name: Customer lookup
+                        description: Finds the sender's account
+                        kind: mcp
+                        target: be853dd0-6245-4912-9615-b876925cd838
+                      - id: 8858ae78-303c-4b09-8d92-0219939d265b
+                        name: Inbox
+                        description: Reads and labels support mail
+                        kind: mcp
+                        target: 58b1554e-f8f6-4685-8761-d07462b17655
+                      - id: ff76a249-4c16-45e8-ab30-31334368364f
+                        name: Docs web search
+                        description: Checks the product docs
+                        kind: bingCustomSearch
+                        target: f7a4840c-4db7-416f-91ee-ede077597127
+            bingResources:
+              - id: eee8fa51-42fa-4d92-aacf-666121206087
+                name: bing-grounding
+                description: Web search for agents
+                kind: search
+                sku: G1
+              - id: 878c3e55-eaed-492a-8c08-a78dba3b3cd4
+                name: bing-custom-docs
+                description: Search limited to product docs
+                kind: customSearch
+                configurations:
+                  - id: f7a4840c-4db7-416f-91ee-ede077597127
+                    name: product-docs
+                    description: Contoso and Microsoft docs
+                    sites: [contoso.com/docs, learn.microsoft.com]
+            postgresServers:
+              - id: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
+                name: psql-chat-prod
+                description: Users and conversation metadata
+                kind: flexibleServer
+                version: "17"
+                sku: GP_Standard_D4ds_v5
+                databases:
+                  - id: be853dd0-6245-4912-9615-b876925cd838
+                    name: chat
+                    description: App database
+          - id: 2c619824-d7e3-46d3-9eff-39f851d688ab
+            name: rg-data-prod
+            description: Analytics and legacy data
+            location: eastus2
+            postgresServers:
+              - id: b5de44f1-749d-492e-a5ca-61dd65d276b7
+                name: cosmos-pg-analytics
+                description: Distributed usage analytics
+                kind: cosmosDb
+              - id: 83b36fd2-c683-4cff-9447-445ba3e7fba2
+                name: hdb-vectors
+                description: Embeddings for semantic search
+                kind: horizonDb
+              - id: 84029c61-fc3f-40ff-bc80-a4491aa3fc8b
+                name: psql-legacy-billing
+                description: Pending migration to flexible server
+                kind: singleServer
+                version: "11"
 
 connections:
   - from: Customers
@@ -138,3 +259,13 @@ connections:
   - from: GitHub
     to: def48140-7106-53db-b2a2-6b8d25ff0368
     label: pushes images
+  - from: 4d639f57-d445-506b-9334-ecc85a885e49
+    to: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
+    label: reads/writes
+  - from: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+    to: 5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1
+    label: sends mail
+  - from: 58b1554e-f8f6-4685-8761-d07462b17655
+    to: 942759ad-3694-493b-8afd-9369ae2a7d5c
+    label: new mail
+    style: dashed

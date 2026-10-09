@@ -25,7 +25,8 @@ The reasoning behind the design is recorded in [`docs/adr/`](docs/adr/README.md)
 `tools/render-svg.cjs` renders a `.drawio` file with draw.io's own renderer in
 headless Chromium (needs Node and the `playwright` package). draw.io's viewer
 script and the icons are fetched from the `jgraph/drawio` GitHub repo and cached
-in `.cache/`; icons are inlined so the SVG is self-contained.
+in `.cache/`, as are the Microsoft 365 icons from Microsoft's CDN; icons are
+inlined so the SVG is self-contained.
 
 ```sh
 node tools/render-svg.cjs examples/sample.drawio examples/sample.svg

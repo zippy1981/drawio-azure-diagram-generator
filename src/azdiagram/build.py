@@ -36,7 +36,14 @@ CHILDREN = {
         ("containerApps", "container_app", None, None),
         ("storageAccounts", "storage_account", None, None),
         ("foundries", "foundry", None, None),
+        ("bingResources", "bing_resource", None, None),
+        ("postgresServers", "postgres_server", None, None),
+        ("virtualNetworks", "virtual_network", None, None),
     ],
+    "bing_resource": [("configurations", "bing_configuration", None, None)],
+    "virtual_network": [("subnets", "subnet", None, None)],
+    "postgres_server": [("databases", "postgres_database", None, None)],
+    "m365": [("apps", "m365_app", None, None)],
     "container_app": [("containers", "container", None, None)],
     "container_registry": [("repositories", "repository", None, None)],
     "storage_account": [("blobContainers", "blob_container", "blob_containers", "Blob containers")],
@@ -51,12 +58,17 @@ CHILDREN = {
 REFERENCES = {
     "container_app": [("identity", {"service_principal"}, "runs as")],
     "container": [("imageRef", {"repository"}, "pulls")],
-    "agent": [("model", {"model_deployment"}, "uses")],
     "connector": [("target", None, "connects to")],
 }
 
 # kinds whose `kind` field picks an icon variant, with its default
-VARIANT_DEFAULTS = {"external": "system", "service_principal": "application"}
+VARIANT_DEFAULTS = {
+    "external": "system",
+    "service_principal": "application",
+    "postgres_server": "flexibleServer",
+    "m365_app": "other",
+    "bing_resource": "search",
+}
 
 PRINCIPAL_KINDS = {"user": "user", "group": "group", "servicePrincipal": "service_principal"}
 
@@ -84,6 +96,8 @@ class _Builder:
         self.externals: dict[str, Node] = {}
         self.edges: list[Edge] = []
         self.deferred: list = []  # reference resolution, run once every node exists
+        self.foundry: Node | None = None  # the foundry being built; model deployments are named within it
+        self.models: dict[tuple[str, str], Node] = {}  # (foundry id, deployment name) -> model deployment
 
     def _claim(self, node_id: str, loc: str) -> None:
         if node_id in self.where:
@@ -102,6 +116,8 @@ class _Builder:
         child_keys = {key for key, *_ in spec}
         path = path + [obj["name"]]
         node_id = (obj.get("id") or derive_id(*path)).lower()
+        if kind == "model_deployment" and (self.foundry.id, obj["name"]) in self.models:
+            raise DiagramError(f"{loc}: duplicate model deployment name {obj['name']!r} in {self.foundry.name!r}")
         self._claim(node_id, loc)
 
         variant = obj.get("kind", VARIANT_DEFAULTS[kind]) if kind in VARIANT_DEFAULTS else None
@@ -119,6 +135,13 @@ class _Builder:
             props=props,
         )
         self.nodes[node_id] = node
+
+        if kind == "model_deployment":
+            self.models[(self.foundry.id, node.name)] = node
+        elif kind == "agent" and "model" in obj:
+            self.deferred.append(partial(self.model_edge, node, self.foundry, obj["model"], f"{loc}.model"))
+        if kind == "foundry":
+            self.foundry = node
 
         for key, child_kind, group_kind, group_label in spec:
             items = obj.get(key) or []
@@ -139,6 +162,12 @@ class _Builder:
             if field in obj:
                 self.deferred.append(partial(self.reference_edge, node, obj[field], kinds, label, f"{loc}.{field}"))
         return node
+
+    def model_edge(self, node: Node, foundry: Node, name: str, loc: str) -> None:
+        target = self.models.get((foundry.id, name))
+        if target is None:
+            raise DiagramError(f"{loc}: no model deployment named {name!r} in {foundry.name!r}")
+        self.implicit_edge(node, target.id, "uses")
 
     def principal(self, item: dict, loc: str, path: list[str], box: Node, index: int) -> Node:
         if "ref" not in item:
@@ -175,6 +204,9 @@ class _Builder:
 
     def reference_edge(self, node: Node, ref: str, kinds, label: str, loc: str) -> None:
         target = self.endpoint(ref, loc) if kinds is None else self.lookup(ref, kinds, loc).id
+        self.implicit_edge(node, target, label)
+
+    def implicit_edge(self, node: Node, target: str, label: str) -> None:
         self.edges.append(
             Edge(
                 id=derive_id("edge", node.id, label, target),
@@ -212,6 +244,10 @@ def build(
 
     if doc.get("entra"):
         sections.append(b.obj("entra_tenant", doc["entra"], "entra", ["entra"]))
+    if doc.get("graph"):
+        sections.append(b.obj("graph", doc["graph"], "graph", ["graph"]))
+    if doc.get("m365"):
+        sections.append(b.obj("m365", doc["m365"], "m365", ["m365"]))
     for i, mg in enumerate(doc.get("managementGroups") or []):
         sections.append(b.obj("management_group", mg, f"managementGroups[{i}]", []))
     for i, sub in enumerate(doc.get("subscriptions") or []):

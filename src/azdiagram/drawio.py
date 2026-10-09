@@ -14,6 +14,7 @@ from .model import Diagram, Edge, Node
 BOX_COLORS = {
     "external_section": ("#f5f5f5", "#666666", False),
     "entra_tenant": ("#e1d5e7", "#9673a6", False),
+    "m365": ("#ffe6cc", "#d79b00", False),
     "group": ("#ffffff", "#9673a6", False),
     "owners": ("none", "#9673a6", True),
     "members": ("none", "#9673a6", True),

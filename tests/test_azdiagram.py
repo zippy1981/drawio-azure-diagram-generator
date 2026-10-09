@@ -32,13 +32,18 @@ def test_sample_is_valid(doc):
         lambda d: d["entra"]["users"][0].__setitem__("bogus", 1),
         lambda d: d["entra"]["servicePrincipals"][0].__setitem__("kind", "robot"),
         lambda d: d["entra"]["groups"][0]["owners"][0].__setitem__("ref", "alice"),
+        lambda d: _foundry(d)["models"][0].__setitem__("id", UUID_A),
     ],
-    ids=["missing-name", "external-id", "non-uuid-id", "unknown-key", "bad-enum", "non-uuid-ref"],
+    ids=["missing-name", "external-id", "non-uuid-id", "unknown-key", "bad-enum", "non-uuid-ref", "model-id"],
 )
 def test_schema_rejects(doc, mutate):
     mutate(doc)
     with pytest.raises(ValidationFailed):
         validate(doc)
+
+
+def _foundry(doc):
+    return doc["managementGroups"][0]["subscriptions"][0]["resourceGroups"][0]["foundries"][0]
 
 
 def _nodes(diagram):
@@ -91,8 +96,10 @@ def test_externals_referenced_by_name(doc):
             "expected service_principal",
         ),
         (lambda d: d["entra"]["users"][1].__setitem__("id", d["entra"]["users"][0]["id"]), "duplicate id"),
+        (lambda d: _foundry(d)["agents"][0].__setitem__("model", "gpt-nope"), "no model deployment named 'gpt-nope'"),
+        (lambda d: _foundry(d)["models"].append({"name": "gpt-chat"}), "duplicate model deployment name"),
     ],
-    ids=["unknown-external", "unknown-uuid", "wrong-kind", "duplicate-id"],
+    ids=["unknown-external", "unknown-uuid", "wrong-kind", "duplicate-id", "unknown-model", "duplicate-model"],
 )
 def test_reference_errors(doc, mutate, message):
     mutate(doc)
@@ -139,3 +146,105 @@ def test_cli(tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text("version: 1\nexternal:\n  - description: no name\n")
     assert main([str(bad), "--validate-only"]) == 1
+
+
+def test_postgres_kinds_pick_icons(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert nodes["psql-chat-prod"].icon.endswith("azure2/databases/Azure_Database_PostgreSQL_Server.svg")
+    assert nodes["cosmos-pg-analytics"].icon.endswith("Azure_Database_PostgreSQL_Server_Group.svg")
+    assert nodes["hdb-vectors"].icon.endswith("azure2/databases/Azure_Database_PostgreSQL_Server.svg")
+    assert nodes["psql-legacy-billing"].icon == "img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg"
+    assert nodes["psql-legacy-billing"].props["kind"] == "singleServer"
+    assert [c.name for c in nodes["psql-chat-prod"].children] == ["chat"]
+
+
+def test_graph_is_a_top_level_section(doc):
+    diagram = build(doc)
+    assert [s.kind for s in diagram.sections] == [
+        "external_section",
+        "entra_tenant",
+        "graph",
+        "m365",
+        "management_group",
+    ]
+    graph = diagram.sections[2]
+    assert any(e.target == graph.id and e.label == "connects to" for e in diagram.edges)
+
+
+def test_schema_rejects_unknown_postgres_kind(doc):
+    rg = doc["managementGroups"][0]["subscriptions"][0]["resourceGroups"][1]
+    rg["postgresServers"][0]["kind"] = "mysql"
+    with pytest.raises(ValidationFailed):
+        validate(doc)
+
+
+def test_m365_apps_pick_icons(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert [c.name for c in nodes["Contoso Microsoft 365"].children] == [
+        "Exchange Online",
+        "Outlook",
+        "SharePoint",
+        "Teams",
+        "Excel",
+    ]
+    assert nodes["Teams"].icon.endswith("/teams_48x1.svg")
+    assert nodes["Exchange Online"].icon.endswith("/outlook_48x1.svg")
+    doc["m365"]["apps"][0]["kind"] = "other"
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert nodes["Exchange Online"].icon.endswith("/office_48x1.svg")
+
+
+def test_agent_connects_to_m365_app_and_postgres(doc):
+    diagram = build(doc)
+    nodes = {n.name: n for n in _nodes(diagram).values()}
+    edges = {(e.source, e.target, e.label) for e in diagram.edges}
+    outlook, agent, db = nodes["Outlook"], nodes["Triage agent"], nodes["chat"]
+    assert (nodes["Inbox"].id, outlook.id, "connects to") in edges
+    assert (nodes["Customer lookup"].id, db.id, "connects to") in edges
+    assert (outlook.id, agent.id, "new mail") in edges
+
+
+def test_agents_reference_models_by_name(doc):
+    diagram = build(doc)
+    nodes = {n.name: n for n in _nodes(diagram).values()}
+    model = nodes["gpt-chat"]
+    for agent in ("Support agent", "Triage agent"):
+        assert any(e.source == nodes[agent].id and e.target == model.id and e.label == "uses" for e in diagram.edges)
+
+
+def test_virtual_network_holds_subnets(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    vnet = nodes["vnet-chat-prod"]
+    assert vnet.icon.endswith("networking/Virtual_Networks.svg")
+    assert vnet.props["addressSpace"] == "10.10.0.0/16"
+    assert [c.name for c in vnet.children] == ["snet-apps", "snet-data"]
+    assert nodes["snet-apps"].props["delegation"] == "Microsoft.App/environments"
+
+
+def test_connectors_reach_graph_m365_external_and_bing(doc):
+    diagram = build(doc)
+    nodes = {n.name: n for n in _nodes(diagram).values()}
+    edges = {(e.source, e.target) for e in diagram.edges if e.label == "connects to"}
+    for connector, target in [
+        ("Graph mail", "Microsoft Graph"),
+        ("Inbox", "Outlook"),
+        ("GitHub MCP", "GitHub"),
+        ("Web search", "bing-grounding"),
+        ("Docs web search", "product-docs"),
+    ]:
+        sources = [n.id for n in _nodes(diagram).values() if n.name == connector]
+        assert any((s, nodes[target].id) in edges for s in sources), connector
+
+
+def test_bing_resources(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert nodes["bing-grounding"].icon.endswith("general/Search.svg")
+    assert nodes["bing-custom-docs"].icon.endswith("general/Search_Grid.svg")
+    assert nodes["product-docs"].props["sites"] == "contoso.com/docs, learn.microsoft.com"
+
+
+def test_schema_allows_configurations_only_on_custom_search(doc):
+    rg = doc["managementGroups"][0]["subscriptions"][0]["resourceGroups"][0]
+    rg["bingResources"][0]["configurations"] = [{"name": "nope"}]
+    with pytest.raises(ValidationFailed):
+        validate(doc)
