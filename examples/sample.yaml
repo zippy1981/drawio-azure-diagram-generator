@@ -54,6 +54,29 @@ graph:
   description: Mail and calendar for the support agent
   permissions: [Mail.Send (application), Calendars.Read (application)]
 
+m365:
+  id: 8929aa11-3287-4f1e-8a55-c3185af8f7aa
+  name: Contoso Microsoft 365
+  description: contoso.com
+  domain: contoso.com
+  apps:
+    - id: 5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1
+      name: Exchange Online
+      description: support@contoso.com mailbox
+      kind: exchange
+    - id: f752955b-80e6-4bd2-a2ab-01f14555a996
+      name: SharePoint
+      description: Product docs site
+      kind: sharePoint
+    - id: 99e50769-7d41-4e05-8f0d-0d386ca19b25
+      name: Teams
+      description: Escalations channel
+      kind: teams
+    - id: 304cc23d-e2da-42d6-b189-7750ec560a27
+      name: Excel
+      description: Weekly support report
+      kind: excel
+
 managementGroups:
   - id: f1ce00c0-d4cc-59d6-b96f-fed6fa042ded
     name: Contoso
@@ -181,3 +204,6 @@ connections:
   - from: 4d639f57-d445-506b-9334-ecc85a885e49
     to: 10fbb93a-dc8b-47d5-a4a6-24a435415e80
     label: reads/writes
+  - from: 86553a5e-593c-4cd1-bed6-f30bb24e37b2
+    to: 5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1
+    label: sends mail

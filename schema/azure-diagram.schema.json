@@ -19,6 +19,7 @@
     },
     "entra": { "$ref": "#/$defs/entraTenant" },
     "graph": { "$ref": "#/$defs/graph" },
+    "m365": { "$ref": "#/$defs/m365" },
     "managementGroups": {
       "description": "Optional management group hierarchy. Subscriptions may live here or at the top level, not both.",
       "type": "array",
@@ -158,6 +159,36 @@
           "type": "array",
           "items": { "type": "string" }
         }
+      }
+    },
+
+    "m365": {
+      "description": "The Microsoft 365 tenant and the apps in use.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "domain": { "type": "string" },
+        "apps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/m365App" }
+        }
+      }
+    },
+
+    "m365App": {
+      "description": "A Microsoft 365 app or workload.",
+      "allOf": [{ "$ref": "#/$defs/named" }],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Picks the default icon. Exchange Online uses the Outlook icon; use 'other' with 'icon' for anything not listed.",
+          "enum": [
+            "exchange", "sharePoint", "oneDrive", "teams", "outlook", "word", "excel", "powerPoint", "oneNote",
+            "forms", "loop", "copilot", "stream", "toDo", "project", "visio", "sway", "other"
+          ],
+          "default": "other"
+        },
+        "url": { "type": "string" }
       }
     },
 

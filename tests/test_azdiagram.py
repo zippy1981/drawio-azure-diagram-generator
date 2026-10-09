@@ -153,7 +153,13 @@ def test_postgres_kinds_pick_icons(doc):
 
 def test_graph_is_a_top_level_section(doc):
     diagram = build(doc)
-    assert [s.kind for s in diagram.sections] == ["external_section", "entra_tenant", "graph", "management_group"]
+    assert [s.kind for s in diagram.sections] == [
+        "external_section",
+        "entra_tenant",
+        "graph",
+        "m365",
+        "management_group",
+    ]
     graph = diagram.sections[2]
     assert any(e.target == graph.id and e.label == "connects to" for e in diagram.edges)
 
@@ -163,3 +169,13 @@ def test_schema_rejects_unknown_postgres_kind(doc):
     rg["postgresServers"][0]["kind"] = "mysql"
     with pytest.raises(ValidationFailed):
         validate(doc)
+
+
+def test_m365_apps_pick_icons(doc):
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert [c.name for c in nodes["Contoso Microsoft 365"].children] == ["Exchange Online", "SharePoint", "Teams", "Excel"]
+    assert nodes["Teams"].icon.endswith("/teams_48x1.svg")
+    assert nodes["Exchange Online"].icon.endswith("/outlook_48x1.svg")
+    doc["m365"]["apps"][0]["kind"] = "other"
+    nodes = {n.name: n for n in _nodes(build(doc)).values()}
+    assert nodes["Exchange Online"].icon.endswith("/office_48x1.svg")

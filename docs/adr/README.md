@@ -17,6 +17,7 @@ ADRs 0002–0010 were inferred from [`PLAN.md`](../../PLAN.md) and the first imp
 | [0009](0009-testing-with-pytest-and-golden-file.md) | Test with pytest and use the sample diagram as a golden file | Accepted |
 | [0010](0010-svg-preview-with-drawio-renderer.md) | Render SVG previews with draw.io's own renderer in headless Chromium | Accepted |
 | [0011](0011-lint-markdown.md) | Lint Markdown with markdownlint on GitHub Actions | Accepted |
+| [0012](0012-microsoft-365-icons-from-microsoft-cdn.md) | Use Microsoft's CDN-hosted product icons for Microsoft 365 | Proposed |
 
 ## Adding a new ADR
 

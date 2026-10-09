@@ -102,9 +102,37 @@
             <mxGeometry x="1088" y="60" width="48" height="48" as="geometry" />
           </mxCell>
         </object>
+        <object id="8929aa11-3287-4f1e-8a55-c3185af8f7aa" label="&lt;b&gt;Contoso Microsoft 365&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;contoso.com&lt;/i&gt;" tooltip="contoso.com" objectType="m365" description="contoso.com" domain="contoso.com">
+          <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+            <mxGeometry x="1212" y="60" width="560" height="149" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="8929aa11-3287-4f1e-8a55-c3185af8f7aa-icon" value="" style="image;aspect=fixed;html=1;image=https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/m365_48x1.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="8929aa11-3287-4f1e-8a55-c3185af8f7aa">
+          <mxGeometry x="8" y="8" width="24" height="24" as="geometry" />
+        </mxCell>
+        <object id="5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1" label="&lt;b&gt;Exchange Online&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;support@contoso.com mailbox&lt;/i&gt;" tooltip="support@contoso.com mailbox" objectType="m365_app" description="support@contoso.com mailbox" kind="exchange">
+          <mxCell style="image;aspect=fixed;html=1;image=https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/outlook_48x1.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="8929aa11-3287-4f1e-8a55-c3185af8f7aa">
+            <mxGeometry x="52" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="f752955b-80e6-4bd2-a2ab-01f14555a996" label="&lt;b&gt;SharePoint&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Product docs site&lt;/i&gt;" tooltip="Product docs site" objectType="m365_app" description="Product docs site" kind="sharePoint">
+          <mxCell style="image;aspect=fixed;html=1;image=https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/sharepoint_48x1.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="8929aa11-3287-4f1e-8a55-c3185af8f7aa">
+            <mxGeometry x="188" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="99e50769-7d41-4e05-8f0d-0d386ca19b25" label="&lt;b&gt;Teams&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Escalations channel&lt;/i&gt;" tooltip="Escalations channel" objectType="m365_app" description="Escalations channel" kind="teams">
+          <mxCell style="image;aspect=fixed;html=1;image=https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/teams_48x1.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="8929aa11-3287-4f1e-8a55-c3185af8f7aa">
+            <mxGeometry x="324" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="304cc23d-e2da-42d6-b189-7750ec560a27" label="&lt;b&gt;Excel&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Weekly support report&lt;/i&gt;" tooltip="Weekly support report" objectType="m365_app" description="Weekly support report" kind="excel">
+          <mxCell style="image;aspect=fixed;html=1;image=https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/excel_48x1.svg;verticalLabelPosition=bottom;verticalAlign=top;align=center;whiteSpace=wrap;labelWidth=120;labelBackgroundColor=none;fontSize=12;" vertex="1" parent="8929aa11-3287-4f1e-8a55-c3185af8f7aa">
+            <mxGeometry x="460" y="40" width="48" height="48" as="geometry" />
+          </mxCell>
+        </object>
         <object id="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded" label="&lt;b&gt;Contoso&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:10px;color:#555555;&quot;&gt;Root management group&lt;/i&gt;" tooltip="Root management group" objectType="management_group" description="Root management group">
           <mxCell style="rounded=1;arcSize=4;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;align=left;verticalAlign=top;spacingLeft=38;spacingTop=4;spacingRight=8;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" vertex="1" parent="1">
-            <mxGeometry x="1212" y="60" width="968" height="995" as="geometry" />
+            <mxGeometry x="1812" y="60" width="968" height="995" as="geometry" />
           </mxCell>
         </object>
         <mxCell id="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded-icon" value="" style="image;aspect=fixed;html=1;image=img/lib/azure2/general/Management_Groups.svg;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;connectable=0;" vertex="1" parent="f1ce00c0-d4cc-59d6-b96f-fed6fa042ded">
@@ -331,6 +359,11 @@
         </object>
         <object id="b542a159-4724-5ebc-ba3d-0bf3d409153e" label="reads/writes">
           <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="4d639f57-d445-506b-9334-ecc85a885e49" target="10fbb93a-dc8b-47d5-a4a6-24a435415e80">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </object>
+        <object id="eb6d1220-86e7-5ac0-92f1-eadc2fbb745a" label="sends mail">
+          <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="86553a5e-593c-4cd1-bed6-f30bb24e37b2" target="5cee10c0-ac05-41fc-9ec0-8b65a9ab24a1">
             <mxGeometry relative="1" as="geometry" />
           </mxCell>
         </object>

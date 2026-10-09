@@ -28,6 +28,8 @@ azdiagram examples/sample.yaml -o sample.drawio
 │       ├── Owners                 box   – owners[]  (ref or inline principal)
 │       └── Members                box   – members[] (ref or inline principal)
 ├── Microsoft Graph                icon  – graph
+├── Microsoft 365                  box   – m365
+│   └── App                        icon  – m365.apps[] (kind picks the app)
 ├── Management group (opt.)        box   – managementGroups[] (nestable)
 └── Subscription                   box   – subscriptions[] (top level or under an MG)
         └── Resource group         box   – resourceGroups[]
@@ -128,7 +130,7 @@ No draw.io install needed at runtime.
 
 Turn the dict into a uniform `Node` tree. Top-level sections, in order:
 **External** (a box holding the external systems), the **Entra tenant**,
-**Microsoft Graph**, each
+**Microsoft Graph**, **Microsoft 365**, each
 top-level **management group**, then each top-level **subscription**. Empty
 sections are dropped.
 
@@ -189,6 +191,15 @@ PostgreSQL servers pick their icon by `kind`:
 
 Their databases use `databases/Managed_Database.svg`.
 
+draw.io has no current Microsoft 365 icons, so the Microsoft 365 box and its
+apps use Microsoft's Fluent product icons by URL
+(`https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/<app>_48x1.svg`,
+see [ADR 0012](docs/adr/0012-microsoft-365-icons-from-microsoft-cdn.md)). The
+box uses `m365`, each app its own icon (`kind: teams` → `teams`), `kind: other`
+uses `office`, and `kind: exchange` uses `outlook` because the CDN has no
+Exchange icon. There is no Planner icon either, so Planner is `kind: other`
+with an `icon:` override.
+
 A per-object `icon:` overrides the table.
 
 ### 3.4 Layout (`layout.py`)
@@ -246,7 +257,7 @@ Each node becomes an `<object>` (a.k.a. UserObject) so `description` and
   bidirectional), `parent="1"` so they can cross box boundaries.
 
 Box colours by tier so nesting is readable (light fills, darker stroke):
-External grey, Entra purple, Management group/Subscription yellow (MG
+External grey, Entra purple, Microsoft 365 orange, Management group/Subscription yellow (MG
 dashed), Resource group blue, resources white, synthetic groupings dashed
 with no fill.
 

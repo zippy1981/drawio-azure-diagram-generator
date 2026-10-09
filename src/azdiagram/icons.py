@@ -2,6 +2,9 @@
 
 BASE = "img/lib/azure2/"
 
+# draw.io has no current Microsoft 365 icons, so those come from Microsoft's Fluent product icon CDN (pinned build).
+M365_BASE = "https://res.cdn.office.net/files/fabric-cdn-prod_20241209.001/assets/brand-icons/product/svg/"
+
 KIND_ICONS = {
     "external_section": "general/Globe.svg",
     "entra_tenant": "identity/Azure_Active_Directory.svg",
@@ -30,6 +33,8 @@ KIND_ICONS = {
     "connector": "integration/Logic_Apps_Custom_Connector.svg",
     "postgres_server": "databases/Azure_Database_PostgreSQL_Server.svg",
     "postgres_database": "databases/Managed_Database.svg",
+    "m365": M365_BASE + "m365_48x1.svg",
+    "m365_app": M365_BASE + "office_48x1.svg",
 }
 
 # (kind, variant) overrides, e.g. the `kind` field of an external system or service principal.
@@ -45,6 +50,29 @@ VARIANT_ICONS = {
     ("postgres_server", "flexibleServer"): "databases/Azure_Database_PostgreSQL_Server.svg",
     ("postgres_server", "cosmosDb"): "databases/Azure_Database_PostgreSQL_Server_Group.svg",
     ("postgres_server", "singleServer"): "img/lib/mscae/Azure_Database_for_PostgreSQL_servers.svg",
+    # The CDN has no Exchange icon; Outlook's is the closest match.
+    **{
+        ("m365_app", app): f"{M365_BASE}{icon}_48x1.svg"
+        for app, icon in {
+            "exchange": "outlook",
+            "sharePoint": "sharepoint",
+            "oneDrive": "onedrive",
+            "teams": "teams",
+            "outlook": "outlook",
+            "word": "word",
+            "excel": "excel",
+            "powerPoint": "powerpoint",
+            "oneNote": "onenote",
+            "forms": "forms",
+            "loop": "loop",
+            "copilot": "copilot",
+            "stream": "stream",
+            "toDo": "todo",
+            "project": "project",
+            "visio": "visio",
+            "sway": "sway",
+        }.items()
+    },
 }
 
 
@@ -52,8 +80,8 @@ def icon_for(kind: str, variant: str | None = None) -> str:
     path = VARIANT_ICONS.get((kind, variant)) or KIND_ICONS.get(kind)
     if path is None:
         raise KeyError(f"no icon for kind {kind!r} (variant {variant!r})")
-    # Paths outside azure2 (e.g. the older mscae set) are given in full.
-    return path if path.startswith("img/") else BASE + path
+    # Paths outside azure2 (e.g. the older mscae set, or a URL) are given in full.
+    return path if path.startswith(("img/", "https://")) else BASE + path
 
 
 def normalize_icon(icon: str) -> str:
