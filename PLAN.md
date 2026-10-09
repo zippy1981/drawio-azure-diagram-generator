@@ -4,7 +4,7 @@ A Python CLI that reads a YAML description of Azure infrastructure (plus Entra I
 and external systems) and writes a `.drawio` file that opens directly in
 draw.io / diagrams.net / the VS Code draw.io extension.
 
-```
+```sh
 azdiagram examples/sample.yaml -o sample.drawio
 ```
 
@@ -17,7 +17,7 @@ azdiagram examples/sample.yaml -o sample.drawio
 
 ### Hierarchy
 
-```
+```text
 (page)
 ├── External                       box   – external[]
 │   └── external system            icon
@@ -51,14 +51,14 @@ azdiagram examples/sample.yaml -o sample.drawio
 
 ### Common fields (every object)
 
-| field         | required | purpose                                                    |
-|---------------|----------|------------------------------------------------------------|
-| `name`        | yes      | first line of the label                                    |
-| `description` | no       | second line of the label + tooltip                         |
+| field         | required | purpose                                                                                            |
+|---------------|----------|----------------------------------------------------------------------------------------------------|
+| `name`        | yes      | first line of the label                                                                            |
+| `description` | no       | second line of the label + tooltip                                                                 |
 | `id`          | no       | UUID; target for `ref`, `connections`, `identity`, `target`, ... (not allowed on external systems) |
-| `icon`        | no       | override the default icon                                  |
-| `style`       | no       | raw draw.io style appended to the generated one            |
-| `tags`        | no       | key/value metadata stored as custom cell properties        |
+| `icon`        | no       | override the default icon                                                                          |
+| `style`       | no       | raw draw.io style appended to the generated one                                                    |
+| `tags`        | no       | key/value metadata stored as custom cell properties                                                |
 
 All ids are UUIDs (e.g. the Entra object id or Azure resource GUID). Ids that
 are omitted are derived as a UUIDv5 of the object's name path
@@ -81,7 +81,7 @@ external names must be unique. Internally they still get a UUIDv5 of
 
 ## 2. Project layout
 
-```
+```text
 pyproject.toml                  # entry point: azdiagram = azdiagram.cli:main
 schema/azure-diagram.schema.json
 examples/sample.yaml
@@ -108,6 +108,7 @@ No draw.io install needed at runtime.
 ## 3. Pipeline
 
 ### 3.1 Load and validate (`loader.py`, `build.py`)
+
 1. `yaml.safe_load`.
 2. Validate against the JSON Schema; print every error with its YAML path
    (`entra.groups[0].members[2]: 'name' is a required property`) and exit 1.
@@ -121,6 +122,7 @@ No draw.io install needed at runtime.
    - `ref` inside owners/members points at a user, group or service principal.
 
 ### 3.2 Build the node tree (`build.py`)
+
 Turn the dict into a uniform `Node` tree. Top-level sections, in order:
 **External** (a box holding the external systems), the **Entra tenant**, each
 top-level **management group**, then each top-level **subscription**. Empty
@@ -136,43 +138,45 @@ icon with its label underneath. So an empty resource group shows as a lone RG
 icon, and a storage account without blob containers shows as a storage icon.
 
 ### 3.3 Icons (`icons.py`)
+
 All are draw.io's built-in Azure stencils (`img/lib/azure2/...`), so the file
 needs no embedded images. Every path below was checked to exist in the
 `jgraph/drawio` repo.
 
-| kind                     | icon path (under `img/lib/azure2/`)          |
-|--------------------------|----------------------------------------------|
-| External section         | `general/Globe.svg`                          |
-| external `kind: system`  | `general/Server_Farm.svg`                    |
-| external `saas`/`internet`| `general/Globe.svg`                         |
-| external `kind: onPrem`  | `networking/On_Premises_Data_Gateways.svg`   |
-| external `kind: user`    | `identity/Users.svg`                         |
-| Entra tenant             | `identity/Azure_Active_Directory.svg`        |
-| Service principal (app)  | `identity/Enterprise_Applications.svg`       |
-| Service principal (MI)   | `identity/Managed_Identities.svg`            |
-| User                     | `identity/Users.svg`                         |
-| Group / Owners / Members | `identity/Groups.svg`                        |
-| Management group         | `general/Management_Groups.svg`              |
-| Subscription             | `general/Subscriptions.svg`                  |
-| Resource group           | `general/Resource_Groups.svg`                |
-| Key vault                | `security/Key_Vaults.svg`                    |
-| Container app            | `other/Worker_Container_App.svg`             |
-| Container                | `containers/Container_Instances.svg`         |
-| Container registry       | `containers/Container_Registries.svg`        |
-| Repository               | `general/Image.svg`                          |
-| Storage account          | `storage/Storage_Accounts.svg`               |
-| Blob containers (group)  | `general/Blob_Block.svg`                     |
-| Blob container           | `general/Storage_Container.svg`              |
-| AI Foundry               | `ai_machine_learning/AI_Foundry.svg`         |
-| Models (group)           | `general/Cubes.svg`                          |
-| Model deployment         | `ai_machine_learning/Azure_OpenAI.svg`       |
-| Agents (group) / Agent   | `ai_machine_learning/Bot_Services.svg`       |
-| Connectors (group)       | `networking/Connections.svg`                 |
-| Connector                | `integration/Logic_Apps_Custom_Connector.svg`|
+| kind                       | icon path (under `img/lib/azure2/`)           |
+|----------------------------|-----------------------------------------------|
+| External section           | `general/Globe.svg`                           |
+| external `kind: system`    | `general/Server_Farm.svg`                     |
+| external `saas`/`internet` | `general/Globe.svg`                           |
+| external `kind: onPrem`    | `networking/On_Premises_Data_Gateways.svg`    |
+| external `kind: user`      | `identity/Users.svg`                          |
+| Entra tenant               | `identity/Azure_Active_Directory.svg`         |
+| Service principal (app)    | `identity/Enterprise_Applications.svg`        |
+| Service principal (MI)     | `identity/Managed_Identities.svg`             |
+| User                       | `identity/Users.svg`                          |
+| Group / Owners / Members   | `identity/Groups.svg`                         |
+| Management group           | `general/Management_Groups.svg`               |
+| Subscription               | `general/Subscriptions.svg`                   |
+| Resource group             | `general/Resource_Groups.svg`                 |
+| Key vault                  | `security/Key_Vaults.svg`                     |
+| Container app              | `other/Worker_Container_App.svg`              |
+| Container                  | `containers/Container_Instances.svg`          |
+| Container registry         | `containers/Container_Registries.svg`         |
+| Repository                 | `general/Image.svg`                           |
+| Storage account            | `storage/Storage_Accounts.svg`                |
+| Blob containers (group)    | `general/Blob_Block.svg`                      |
+| Blob container             | `general/Storage_Container.svg`               |
+| AI Foundry                 | `ai_machine_learning/AI_Foundry.svg`          |
+| Models (group)             | `general/Cubes.svg`                           |
+| Model deployment           | `ai_machine_learning/Azure_OpenAI.svg`        |
+| Agents (group) / Agent     | `ai_machine_learning/Bot_Services.svg`        |
+| Connectors (group)         | `networking/Connections.svg`                  |
+| Connector                  | `integration/Logic_Apps_Custom_Connector.svg` |
 
 A per-object `icon:` overrides the table.
 
 ### 3.4 Layout (`layout.py`)
+
 Simple, deterministic, bottom-up "shelf" packing — no external layout engine.
 
 Constants: icon 48×48; leaf cell width 120 (room for a wrapped label) and
@@ -192,6 +196,7 @@ its right); gap 16 between siblings.
    or stacked (`vertical`), aligned at the top.
 
 ### 3.5 draw.io output (`drawio.py`)
+
 Uncompressed XML (diff-friendly, and draw.io reads it):
 
 ```xml
@@ -236,16 +241,18 @@ diagram produces a stable diff.
 
 ## 4. CLI
 
-```
+```text
 azdiagram INPUT.yaml [-o OUTPUT.drawio] [--no-descriptions]
                     [--direction horizontal|vertical] [--validate-only]
 ```
+
 Default output is `INPUT.drawio` next to the input. Exit codes: 0 ok,
 1 validation error, 2 usage error.
 
 ## 5. Testing
 
 All in `tests/test_azdiagram.py`:
+
 - schema: sample validates; invalid docs (missing name, unknown key, bad
   enum, non-UUID id, `id` on an external system, non-UUID ref) each fail.
 - build: synthetic groupings appear only when non-empty; box/icon rule;
