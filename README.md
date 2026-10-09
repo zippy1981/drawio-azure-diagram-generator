@@ -1,6 +1,7 @@
 # drawio-azure-diagram-generator
 
 [![CI](https://github.com/zippy1981/drawio-azure-diagram-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/zippy1981/drawio-azure-diagram-generator/actions/workflows/ci.yml)
+[![Lint Markdown](https://github.com/zippy1981/drawio-azure-diagram-generator/actions/workflows/markdown-lint.yml/badge.svg)](https://github.com/zippy1981/drawio-azure-diagram-generator/actions/workflows/markdown-lint.yml)
 
 Turn a YAML description of Azure infrastructure (plus Entra ID and external
 systems) into a [draw.io](https://www.drawio.com/) diagram.
@@ -18,6 +19,7 @@ azdiagram infra.yaml --validate-only
 
 The YAML format is defined by [`schema/azure-diagram.schema.json`](schema/azure-diagram.schema.json);
 see [`examples/sample.yaml`](examples/sample.yaml) and [PLAN.md](PLAN.md) for the details.
+The reasoning behind the design is recorded in [`docs/adr/`](docs/adr/README.md).
 
 ## Rendering to SVG
 
