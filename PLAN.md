@@ -27,9 +27,8 @@ azdiagram examples/sample.yaml -o sample.drawio
 │   └── Group                      box   – entra.groups[]
 │       ├── Owners                 box   – owners[]  (ref or inline principal)
 │       └── Members                box   – members[] (ref or inline principal)
-└── Azure
-    ├── Management group (opt.)    box   – managementGroups[] (nestable)
-    └── Subscription               box   – subscriptions[] (top level or under an MG)
+├── Management group (opt.)        box   – managementGroups[] (nestable)
+└── Subscription                   box   – subscriptions[] (top level or under an MG)
         └── Resource group         box   – resourceGroups[]
             ├── Key vault          icon  – keyVaults[]
             ├── Container app      box   – containerApps[]
@@ -89,15 +88,18 @@ examples/sample.yaml
 src/azdiagram/
     __init__.py
     cli.py          # argparse: input, -o/--output, --no-descriptions, --validate-only
-    loader.py       # YAML load + JSON Schema validation + semantic checks
+    loader.py       # YAML load + JSON Schema validation
     model.py        # dataclasses: Node(kind, id, name, description, icon, children, props)
-    build.py        # YAML dict -> Node tree (incl. synthetic grouping boxes)
+    build.py        # YAML dict -> Node tree (incl. synthetic grouping boxes) + reference checks
     icons.py        # kind -> draw.io image path table
     layout.py       # sizes and positions (pure, no XML)
     drawio.py       # Node tree + edges -> mxGraphModel XML
+tools/
+    render-svg.cjs  # .drawio -> .svg with draw.io's own renderer in headless Chromium
 tests/
-    test_schema.py  test_build.py  test_layout.py  test_drawio.py
-    golden/sample.drawio
+    test_azdiagram.py
+examples/
+    sample.yaml  sample.drawio  sample.svg   # sample.drawio doubles as the golden file
 ```
 
 Dependencies: `PyYAML`, `jsonschema`. XML via stdlib `xml.etree.ElementTree`.
@@ -105,11 +107,11 @@ No draw.io install needed at runtime.
 
 ## 3. Pipeline
 
-### 3.1 Load and validate (`loader.py`)
+### 3.1 Load and validate (`loader.py`, `build.py`)
 1. `yaml.safe_load`.
 2. Validate against the JSON Schema; print every error with its YAML path
    (`entra.groups[0].members[2]: 'name' is a required property`) and exit 1.
-3. Semantic checks the schema can't express:
+3. Semantic checks the schema can't express (done while building, in `build.py`):
    - ids are unique across the whole document (explicit + derived), and
      external system names are unique;
    - every `ref`, `identity`, `imageRef`, `model` resolves to a UUID id;
@@ -119,9 +121,10 @@ No draw.io install needed at runtime.
    - `ref` inside owners/members points at a user, group or service principal.
 
 ### 3.2 Build the node tree (`build.py`)
-Turn the dict into a uniform `Node` tree. Root children are the three
-sections: **External**, **Entra tenant**, **Azure** (Azure holds the
-management groups and/or top-level subscriptions). Empty sections are dropped.
+Turn the dict into a uniform `Node` tree. Top-level sections, in order:
+**External** (a box holding the external systems), the **Entra tenant**, each
+top-level **management group**, then each top-level **subscription**. Empty
+sections are dropped.
 
 Synthetic grouping nodes are inserted where the hierarchy asks for them:
 `Owners`, `Members`, `Blob containers`, `Models`, `Agents`, `Connectors`. They
@@ -139,7 +142,10 @@ needs no embedded images. Every path below was checked to exist in the
 
 | kind                     | icon path (under `img/lib/azure2/`)          |
 |--------------------------|----------------------------------------------|
-| External section / system| `general/Globe.svg`                          |
+| External section         | `general/Globe.svg`                          |
+| external `kind: system`  | `general/Server_Farm.svg`                    |
+| external `saas`/`internet`| `general/Globe.svg`                         |
+| external `kind: onPrem`  | `networking/On_Premises_Data_Gateways.svg`   |
 | external `kind: user`    | `identity/Users.svg`                         |
 | Entra tenant             | `identity/Azure_Active_Directory.svg`        |
 | Service principal (app)  | `identity/Enterprise_Applications.svg`       |
@@ -239,16 +245,17 @@ Default output is `INPUT.drawio` next to the input. Exit codes: 0 ok,
 
 ## 5. Testing
 
-- `test_schema.py`: sample validates; table of invalid docs (missing name,
-  unknown key, bad enum, non-UUID id, `id` on an external system) each fails.
-- `test_build.py`: synthetic groupings appear only when non-empty; box/icon
-  rule; derived ids are stable; unresolved/mistyped refs raise clear errors.
-- `test_layout.py`: children never overlap and stay inside the parent;
-  wrapping happens at `maxRowWidth`.
-- `test_drawio.py`: output parses as XML; every `parent` exists; every edge's
-  source/target exists; golden-file comparison against `tests/golden/sample.drawio`.
-- Manual check: open the sample in diagrams.net (or export with the draw.io
-  desktop CLI `drawio -x -f png`) and eyeball it.
+All in `tests/test_azdiagram.py`:
+- schema: sample validates; invalid docs (missing name, unknown key, bad
+  enum, non-UUID id, `id` on an external system, non-UUID ref) each fail.
+- build: synthetic groupings appear only when non-empty; box/icon rule;
+  derived ids are stable UUIDs; group refs copy the principal; externals are
+  referenced by name; unknown/mistyped/duplicate refs raise clear errors.
+- layout: children never overlap and stay inside the parent.
+- draw.io: every `parent`/`source`/`target` exists; `examples/sample.drawio`
+  is exactly what the sample renders to (regenerate it when output changes).
+- Visual check: `node tools/render-svg.cjs examples/sample.drawio examples/sample.svg`
+  renders with draw.io's own code, so the SVG shows what draw.io will show.
 
 ## 6. Milestones
 
@@ -259,6 +266,10 @@ Default output is `INPUT.drawio` next to the input. Exit codes: 0 ok,
 5. Styling polish, `--no-descriptions`, `direction`, golden tests, README.
 
 ## 7. Later / out of scope for v1
+
+- Better edge routing. Edges use draw.io's orthogonal router across nested
+  boxes, so in busy diagrams they cross labels. ELK (via elkjs) is the likely
+  fix; in the meantime draw.io's Arrange → Layout helps.
 
 - More resource types (VNets/subnets, App Service, Cosmos DB, SQL) – each is a
   schema `$def`, a list on `resourceGroup`, and an icon row.
