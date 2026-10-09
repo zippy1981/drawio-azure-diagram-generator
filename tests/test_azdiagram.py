@@ -110,9 +110,7 @@ def test_layout_children_inside_parent_without_overlap(doc):
             assert c.x + c.width <= node.width and c.y + c.height <= node.height
         for i, a in enumerate(kids):
             for b in kids[i + 1 :]:
-                apart = (
-                    a.x + a.width <= b.x or b.x + b.width <= a.x or a.y + a.height <= b.y or b.y + b.height <= a.y
-                )
+                apart = a.x + a.width <= b.x or b.x + b.width <= a.x or a.y + a.height <= b.y or b.y + b.height <= a.y
                 assert apart, (a.name, b.name)
 
 

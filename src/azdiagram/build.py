@@ -88,8 +88,7 @@ class _Builder:
     def _claim(self, node_id: str, loc: str) -> None:
         if node_id in self.where:
             raise DiagramError(
-                f"{loc}: duplicate id {node_id} (also used at {self.where[node_id]}); "
-                "give one of them an explicit id"
+                f"{loc}: duplicate id {node_id} (also used at {self.where[node_id]}); give one of them an explicit id"
             )
         self.where[node_id] = loc
 
